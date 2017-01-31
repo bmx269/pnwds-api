@@ -1,0 +1,10 @@
+multiversion.settings:
+  type: config_object
+  label: 'Multiversion settings'
+  mapping:
+    enabled_entity_types:
+      type: sequence
+      label: 'Enabled entity types'
+      sequence:
+        type: string
+        label: 'Content entity type'
