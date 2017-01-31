@@ -1,0 +1,33 @@
+simple_oauth.oauth2_token.bundle.*:
+  type: config_entity
+  label: 'OAuth2 token type'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    description:
+      type: text
+      label: 'Description'
+    locked:
+      type: boolean
+      label: 'Locked'
+
+simple_oauth.settings:
+  type: config_object
+  label: 'Simple OAuth Settings'
+  mapping:
+    expiration:
+      type: integer
+      label: 'Expiration Time'
+      description: 'The default period in seconds while a token is valid'
+    public_key:
+      type: path
+      label: 'Public Key'
+      description: 'The path to the public file.'
+    private_key:
+      type: path
+      label: 'Private Key'
+      description: 'The path to the private file.'

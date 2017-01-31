@@ -1,0 +1,13 @@
+name: Field validation
+type: module
+description: 'Field validation.'
+package: Field
+# version: VERSION
+# core: 8.x
+dependencies:
+  - field
+# Information added by Drupal.org packaging script on 2016-06-09
+version: '8.x-1.0-alpha5'
+core: '8.x'
+project: 'field_validation'
+datestamp: 1465497242
