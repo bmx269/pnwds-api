@@ -1,14 +1,14 @@
 name: JSON API
 type: module
-description: Provides a JSON API format for the REST resources.
+description: Provides a JSON API standards-compliant API for accessing and manipulating Drupal content and configuration entities.
 # core: 8.x
 package: Web services
 dependencies:
   - drupal:system (>=8.2)
   - serialization
 
-# Information added by Drupal.org packaging script on 2017-01-25
-version: '8.x-1.0-alpha3+45-dev'
+# Information added by Drupal.org packaging script on 2017-01-28
+version: '8.x-1.0-alpha4'
 core: '8.x'
 project: 'jsonapi'
-datestamp: 1485347592
+datestamp: 1485589387
