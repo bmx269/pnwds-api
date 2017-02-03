@@ -8,7 +8,13 @@
         "wikimedia/composer-merge-plugin": "~1.3"
     },
     "replace": {
-        "drupal/core": "~8.2"
+        "drupal/core": "~8.2",
+        "drupal/conflict": "8.*",
+        "drupal/jsonapi": "8.*",
+        "drupal/jwt": "8.*",
+        "drupal/multiversion": "8.*",
+        "drupal/relaxed": "8.*",
+        "drupal/simple_oauth": "8.*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -23,7 +29,13 @@
         ],
         "merge-plugin": {
             "include": [
-                "core/composer.json"
+                "core/composer.json",
+                "modules/contrib/conflict/composer.json",
+                "modules/contrib/jsonapi/composer.json",
+                "modules/contrib/jwt/composer.json",
+                "modules/contrib/multiversion/composer.json",
+                "modules/contrib/relaxed/composer.json",
+                "modules/contrib/simple_oauth/composer.json"
             ],
             "recurse": false,
             "replace": false,
@@ -32,13 +44,22 @@
     },
     "autoload": {
         "psr-4": {
-            "Drupal\\Core\\Composer\\": "core/lib/Drupal/Core/Composer"
+            "Drupal\\Core\\Composer\\": "core/lib/Drupal/Core/Composer",
+            "Drupal\\composer_manager\\Composer\\": "modules/contrib/composer_manager/src/Composer"
         }
     },
     "scripts": {
         "pre-autoload-dump": "Drupal\\Core\\Composer\\Composer::preAutoloadDump",
         "post-autoload-dump": "Drupal\\Core\\Composer\\Composer::ensureHtaccess",
         "post-package-install": "Drupal\\Core\\Composer\\Composer::vendorTestCodeCleanup",
-        "post-package-update": "Drupal\\Core\\Composer\\Composer::vendorTestCodeCleanup"
-    }
+        "post-package-update": "Drupal\\Core\\Composer\\Composer::vendorTestCodeCleanup",
+        "drupal-rebuild": "Drupal\\composer_manager\\Composer\\Command::rebuild",
+        "drupal-update": "Drupal\\composer_manager\\Composer\\Command::update"
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packagist.drupal-composer.org"
+        }
+    ]
 }

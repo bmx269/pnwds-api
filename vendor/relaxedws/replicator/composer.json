@@ -1,0 +1,38 @@
+{
+  "name": "relaxedws/replicator",
+  "description": "couchdb-replicator",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "license": "GPL-2.0+",
+  "authors": [
+    {
+      "name": "abhishek kumar",
+      "email": "abhi170893@gmail.com"
+    }
+  ],
+  "require-dev": {
+    "phpunit/phpunit": "4.6.*"
+  },
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/doctrine/couchdb-client"
+    }
+  ],
+  "require": {
+      "doctrine/couchdb": "dev-master"
+  },
+  "bin": [
+    "replicator"
+  ],
+  "autoload": {
+    "psr-4": {
+      "Relaxed\\Replicator\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Relaxed\\Replicator\\Test\\": "tests"
+    }
+  }
+}

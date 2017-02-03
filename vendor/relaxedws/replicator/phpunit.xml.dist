@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.6/phpunit.xsd"
+         backupGlobals="false"
+         colors="true"
+         bootstrap="vendor/autoload.php"
+        >
+
+    <php>
+        <var name='RELAXED_REPLICATOR_SOURCE_DATABASE'
+             value='relaxed_replicator_source_test_database' />
+        <var name='RELAXED_REPLICATOR_TARGET_DATABASE'
+             value='relaxed_replicator_target_test_database' />
+    </php>
+
+    <testsuites>
+        <testsuite name="CouchDB Replicator Test Suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
