@@ -63,6 +63,7 @@ class PageCacheTest extends WebTestBase {
     sort($cache_entry->tags);
     $expected_tags = array(
       'config:user.role.anonymous',
+      'http_response',
       'pre_render',
       'rendered',
       'system_test_cache_tags_page',
@@ -94,6 +95,7 @@ class PageCacheTest extends WebTestBase {
     sort($cache_entry->tags);
     $expected_tags = array(
       'config:user.role.anonymous',
+      'http_response',
       'pre_render',
       'rendered',
       'system_test_cache_tags_page',
@@ -378,11 +380,11 @@ class PageCacheTest extends WebTestBase {
       // Given that a second might have passed we cannot be sure that
       // $difference will exactly equal the default cache_ttl_4xx setting.
       // Account for any timing difference or rounding errors by ensuring the
-      // value is within 5 seconds.
+      // value is within 10 seconds.
       $this->assertTrue(
-        $difference > $cache_ttl_4xx - 5 &&
-        $difference < $cache_ttl_4xx + 5,
-        'The cache entry expiry time uses the cache_ttl_4xx setting.'
+        $difference > $cache_ttl_4xx - 10 &&
+        $difference < $cache_ttl_4xx + 10,
+        "The cache entry expiry time uses the cache_ttl_4xx setting. Expire: {$cache_item->expire} Created: {$cache_item->created}"
       );
     }
 

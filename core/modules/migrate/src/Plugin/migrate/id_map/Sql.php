@@ -313,8 +313,10 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
       // and map from the source field names to the map/msg field names.
       $count = 1;
       $source_id_schema = array();
+      $indexes = [];
       foreach ($this->migration->getSourcePlugin()->getIds() as $id_definition) {
         $mapkey = 'sourceid' . $count++;
+        $indexes['source'][] = $mapkey;
         $source_id_schema[$mapkey] = $this->getFieldSchema($id_definition);
         $source_id_schema[$mapkey]['not null'] = TRUE;
       }
@@ -369,6 +371,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
         'description' => 'Mappings from source identifier value(s) to destination identifier value(s).',
         'fields' => $fields,
         'primary key' => array(static::SOURCE_IDS_HASH),
+        'indexes' => $indexes,
       );
       $this->getDatabase()->schema()->createTable($this->mapTableName, $schema);
 
@@ -818,7 +821,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
   }
 
   /**
-   * Implementation of Iterator::rewind().
+   * Implementation of \Iterator::rewind().
    *
    * This is called before beginning a foreach loop.
    */
@@ -839,7 +842,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
   }
 
   /**
-   * Implementation of Iterator::current().
+   * Implementation of \Iterator::current().
    *
    * This is called when entering a loop iteration, returning the current row.
    */
@@ -848,7 +851,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
   }
 
   /**
-   * Implementation of Iterator::key().
+   * Implementation of \Iterator::key().
    *
    * This is called when entering a loop iteration, returning the key of the
    * current row. It must be a scalar - we will serialize to fulfill the
@@ -893,7 +896,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
   }
 
   /**
-   * Implementation of Iterator::next().
+   * Implementation of \Iterator::next().
    *
    * This is called at the bottom of the loop implicitly, as well as explicitly
    * from rewind().
@@ -911,7 +914,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
   }
 
   /**
-   * Implementation of Iterator::valid().
+   * Implementation of \Iterator::valid().
    *
    * This is called at the top of the loop, returning TRUE to process the loop
    * and FALSE to terminate it.

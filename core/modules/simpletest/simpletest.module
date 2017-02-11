@@ -12,6 +12,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\simpletest\TestBase;
 use Drupal\Core\Test\TestDatabase;
 use Drupal\simpletest\TestDiscovery;
+use Drupal\Tests\Listeners\SimpletestUiPrinter;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Drupal\Core\Test\TestStatus;
 
@@ -317,6 +318,7 @@ function simpletest_phpunit_run_command(array $unescaped_test_classnames, $phpun
   // this variable.
   if ($base_url) {
     putenv('SIMPLETEST_BASE_URL=' . $base_url);
+    putenv('BROWSERTEST_OUTPUT_DIRECTORY=' . \Drupal::service('file_system')->realpath('public://simpletest'));
   }
   $phpunit_bin = simpletest_phpunit_command();
 
@@ -324,6 +326,8 @@ function simpletest_phpunit_run_command(array $unescaped_test_classnames, $phpun
     $phpunit_bin,
     '--log-junit',
     escapeshellarg($phpunit_file),
+    '--printer',
+    escapeshellarg(SimpletestUiPrinter::class),
   );
 
   // Optimized for running a single test.
@@ -357,6 +361,7 @@ function simpletest_phpunit_run_command(array $unescaped_test_classnames, $phpun
   putenv('SIMPLETEST_DB=');
   if ($base_url) {
     putenv('SIMPLETEST_BASE_URL=');
+    putenv('BROWSERTEST_OUTPUT_DIRECTORY=');
   }
   return $ret;
 }
@@ -374,17 +379,16 @@ function simpletest_phpunit_command() {
   $reflector = new ReflectionClass($autoloader);
   $vendor_dir = dirname(dirname($reflector->getFileName()));
 
-  // Don't use the committed version in composer's bin dir if running on
-  // windows.
+  // The file in Composer's bin dir is a *nix link, which does not work when
+  // extracted from a tarball and generally not on Windows.
+  $command = $vendor_dir . '/phpunit/phpunit/phpunit';
   if (substr(PHP_OS, 0, 3) == 'WIN') {
+    // On Windows it is necessary to run the script using the PHP executable.
     $php_executable_finder = new PhpExecutableFinder();
     $php = $php_executable_finder->find();
-    $phpunit_bin = escapeshellarg($php) . ' -f ' . escapeshellarg($vendor_dir . '/phpunit/phpunit/composer/bin/phpunit') . ' --';
+    $command = $php . ' -f ' . escapeshellarg($command) . ' --';
   }
-  else {
-    $phpunit_bin = $vendor_dir . '/phpunit/phpunit/phpunit';
-  }
-  return $phpunit_bin;
+  return $command;
 }
 
 /**
@@ -569,13 +573,20 @@ function simpletest_log_read($test_id, $database_prefix, $test_class) {
  *       ),
  *     );
  *   @endcode
+ *
+ * @deprecated in Drupal 8.3.x, for removal before 9.0.0 release. Use
+ *   \Drupal::service('test_discovery')->getTestClasses($extension, $types)
+ *   instead.
  */
 function simpletest_test_get_all($extension = NULL, array $types = []) {
   return \Drupal::service('test_discovery')->getTestClasses($extension, $types);
 }
 
 /**
- * Registers namespaces for disabled modules.
+ * Registers test namespaces of all extensions and core test classes.
+ *
+ * @deprecated in Drupal 8.3.x for removal before 9.0.0 release. Use
+ *   \Drupal::service('test_discovery')->registerTestNamespaces() instead.
  */
 function simpletest_classloader_register() {
   \Drupal::service('test_discovery')->registerTestNamespaces();

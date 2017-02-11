@@ -1768,8 +1768,8 @@
  * processing state.
  *
  * The argument to \Drupal::formBuilder()->getForm() is the name of a class that
- * implements FormBuilderInterface. Any additional arguments passed to the
- * getForm() method will be passed along as additional arguments to the
+ * implements FormInterface. Any additional arguments passed to the getForm()
+ * method will be passed along as additional arguments to the
  * ExampleForm::buildForm() method.
  *
  * For example:
@@ -2176,6 +2176,17 @@ function hook_countries_alter(&$countries) {
  */
 function hook_display_variant_plugin_alter(array &$definitions) {
   $definitions['full_page']['admin_label'] = t('Block layout');
+}
+
+/**
+ * Allow modules to alter layout plugin definitions.
+ *
+ * @param \Drupal\Core\Layout\LayoutDefinition[] $definitions
+ *   The array of layout definitions, keyed by plugin ID.
+ */
+function hook_layout_alter(&$definitions) {
+  // Remove a layout.
+  unset($definitions['twocol']);
 }
 
 /**
