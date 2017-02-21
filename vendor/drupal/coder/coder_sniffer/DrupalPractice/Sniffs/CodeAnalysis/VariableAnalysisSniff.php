@@ -2,8 +2,6 @@
 /**
  * This file is part of the VariableAnalysis addon for PHP_CodeSniffer.
  *
- * PHP version 5
- *
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Sam Graham <php-codesniffer-variableanalysis BLAHBLAH illusori.co.uk>
@@ -62,6 +60,7 @@ class VariableInfo
     public $firstInitialized;
     public $firstRead;
     public $ignoreUnused = false;
+    public $lastAssignment;
 
     static $scopeTypeDescriptions = array(
                                      'local'  => 'variable',
@@ -549,13 +548,13 @@ class DrupalPractice_Sniffs_CodeAnalysis_VariableAnalysisSniff implements PHP_Co
      *  Allows exceptions in a catch block to be unused without provoking unused-var warning.
      *  Set generic.codeanalysis.variableanalysis.allowUnusedCaughtExceptions to a true value.
      */
-    public $allowUnusedCaughtExceptions = false;
+    public $allowUnusedCaughtExceptions = true;
 
     /**
      *  Allow function parameters to be unused without provoking unused-var warning.
      *  Set generic.codeanalysis.variableanalysis.allowUnusedFunctionParameters to a true value.
      */
-    public $allowUnusedFunctionParameters = false;
+    public $allowUnusedFunctionParameters = true;
 
     /**
      *  A list of names of placeholder variables that you want to ignore from
@@ -687,6 +686,19 @@ class DrupalPractice_Sniffs_CodeAnalysis_VariableAnalysisSniff implements PHP_Co
     }//end getScopeInfo()
 
 
+    /**
+     * Get variable information for a given variable name.
+     *
+     * @param string $varName
+     *   Name of the variable.
+     * @param int    $currScope
+     *   Token stack pointer of the current scope.
+     * @param bool   $autoCreate
+     *   TRUE if the variable should be auto created.
+     *
+     * @return VariableInfo|null
+     *   Information about the variable.
+     */
     function getVariableInfo($varName, $currScope, $autoCreate = true)
     {
         $scopeInfo = $this->getScopeInfo($currScope, $autoCreate);
@@ -716,6 +728,7 @@ class DrupalPractice_Sniffs_CodeAnalysis_VariableAnalysisSniff implements PHP_Co
         }
 
         if (isset($varInfo->firstInitialized) === true && ($varInfo->firstInitialized <= $stackPtr)) {
+            $varInfo->lastAssignment = $stackPtr;
             return;
         }
 
@@ -755,6 +768,12 @@ class DrupalPractice_Sniffs_CodeAnalysis_VariableAnalysisSniff implements PHP_Co
 
         if (isset($varInfo->firstDeclared) === true && ($varInfo->firstDeclared <= $stackPtr)) {
             return;
+        }
+
+        // When a global variable is declared it also means we can consider it as
+        // being initialized.
+        if ($scopeType === 'global') {
+            $varInfo->firstInitialized = $stackPtr;
         }
 
         $varInfo->firstDeclared = $stackPtr;
@@ -1142,8 +1161,23 @@ class DrupalPractice_Sniffs_CodeAnalysis_VariableAnalysisSniff implements PHP_Co
                 // TODO: typeHints in use?
                 $this->markVariableDeclaration($varName, 'bound', null, $stackPtr, $functionPtr);
                 $this->markVariableAssignment($varName, $stackPtr, $functionPtr);
+
+                // Are we pass-by-reference?
+                $referencePtr = $phpcsFile->findPrevious(
+                    T_WHITESPACE,
+                    ($stackPtr - 1),
+                    null,
+                    true,
+                    null,
+                    true
+                );
+                if (($referencePtr !== false) && ($tokens[$referencePtr]['code'] === T_BITWISE_AND)) {
+                    $varInfo = $this->getVariableInfo($varName, $functionPtr);
+                    $varInfo->passByReference = true;
+                }
+
                 return true;
-            }
+            }//end if
         }//end if
 
         return false;
@@ -1247,7 +1281,8 @@ class DrupalPractice_Sniffs_CodeAnalysis_VariableAnalysisSniff implements PHP_Co
              'argv',
              'argc',
             )
-        ) === true) {
+        ) === true
+        ) {
             return true;
         }
 
@@ -1956,7 +1991,7 @@ class DrupalPractice_Sniffs_CodeAnalysis_VariableAnalysisSniff implements PHP_Co
                 continue;
             }
 
-            if (($varInfo->passByReference === true) && (isset($varInfo->firstInitialized) === true)) {
+            if (($varInfo->passByReference === true) && isset($varInfo->lastAssignment) === true) {
                 // If we're pass-by-reference then it's a common pattern to
                 // use the variable to return data to the caller, so any
                 // assignment also counts as "variable use" for the purposes
@@ -1974,9 +2009,7 @@ class DrupalPractice_Sniffs_CodeAnalysis_VariableAnalysisSniff implements PHP_Co
                      "\${$varInfo->name}",
                     )
                 );
-            }
-
-            if (isset($varInfo->firstInitialized) === true) {
+            } else if (isset($varInfo->firstInitialized) === true) {
                 $phpcsFile->addWarning(
                     "Unused %s %s.",
                     $varInfo->firstInitialized,
@@ -1986,7 +2019,7 @@ class DrupalPractice_Sniffs_CodeAnalysis_VariableAnalysisSniff implements PHP_Co
                      "\${$varInfo->name}",
                     )
                 );
-            }
+            }//end if
         }//end foreach
 
     }//end processScopeClose()
