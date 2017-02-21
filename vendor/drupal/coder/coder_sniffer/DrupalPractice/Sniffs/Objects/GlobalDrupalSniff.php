@@ -2,8 +2,6 @@
 /**
  * DrupalPractice_Sniffs_Objects_GlobalDrupalSniff.
  *
- * PHP version 5
- *
  * @category PHP
  * @package  PHP_CodeSniffer
  * @link     http://pear.php.net/package/PHP_CodeSniffer
@@ -26,9 +24,11 @@ class DrupalPractice_Sniffs_Objects_GlobalDrupalSniff implements PHP_CodeSniffer
      */
     public static $baseClasses = array(
                                   'BlockBase',
+                                  'ConfigFormBase',
                                   'ControllerBase',
                                   'FormBase',
                                   'EntityForm',
+                                  'WidgetBase',
                                  );
 
 
@@ -79,16 +79,10 @@ class DrupalPractice_Sniffs_Objects_GlobalDrupalSniff implements PHP_CodeSniffer
 
         // Check if the class extends another class and get the name of the class
         // that is extended.
-        $classPtr   = key($tokens[$stackPtr]['conditions']);
-        $extendsPtr = $phpcsFile->findNext(T_EXTENDS, ($classPtr + 1), $tokens[$classPtr]['scope_opener']);
-        if ($extendsPtr === false) {
-            return;
-        }
+        $classPtr    = key($tokens[$stackPtr]['conditions']);
+        $extendsName = $phpcsFile->findExtendedClassName($classPtr);
 
-        $extendsNamePtr = $phpcsFile->findNext(T_STRING, ($extendsPtr + 1), $tokens[$classPtr]['scope_opener']);
-
-        if ($extendsNamePtr === false || in_array($tokens[$extendsNamePtr]['content'], static::$baseClasses) === false
-        ) {
+        if ($extendsName === false || in_array($extendsName, static::$baseClasses) === false) {
             return;
         }
 

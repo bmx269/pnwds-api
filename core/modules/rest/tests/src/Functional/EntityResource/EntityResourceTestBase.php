@@ -111,11 +111,6 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
   protected static $secondCreatedEntityId = 3;
 
   /**
-   * @var \GuzzleHttp\ClientInterface
-   */
-  protected $httpClient;
-
-  /**
    * The main entity used for testing.
    *
    * @var \Drupal\Core\Entity\EntityInterface
@@ -164,10 +159,6 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
     $this->serializer = $this->container->get('serializer');
     $this->entityStorage = $this->container->get('entity_type.manager')
       ->getStorage(static::$entityTypeId);
-
-    // Set up a HTTP client that accepts relative URLs.
-    $this->httpClient = $this->container->get('http_client_factory')
-      ->fromOptions(['base_uri' => $this->baseUrl]);
 
     // Create an entity.
     $this->entity = $this->createEntity();
@@ -433,22 +424,24 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
     $unserialized = $this->serializer->deserialize((string) $response->getBody(), get_class($this->entity), static::$format);
     $this->assertSame($unserialized->uuid(), $this->entity->uuid());
     // Finally, assert that the expected 'Link' headers are present.
-    $this->assertArrayHasKey('Link', $response->getHeaders());
-    $link_relation_type_manager = $this->container->get('plugin.manager.link_relation_type');
-    $expected_link_relation_headers = array_map(function ($rel) use ($link_relation_type_manager) {
-      $definition = $link_relation_type_manager->getDefinition($rel, FALSE);
-      return (!empty($definition['uri']))
-        ? $definition['uri']
-        : $rel;
-    }, array_keys($this->entity->getEntityType()->getLinkTemplates()));
-    $parse_rel_from_link_header = function ($value) use ($link_relation_type_manager) {
-      $matches = [];
-      if (preg_match('/rel="([^"]+)"/', $value, $matches) === 1) {
-        return $matches[1];
-      }
-      return FALSE;
-    };
-    $this->assertSame($expected_link_relation_headers, array_map($parse_rel_from_link_header, $response->getHeader('Link')));
+    if ($this->entity->getEntityType()->getLinkTemplates()) {
+      $this->assertArrayHasKey('Link', $response->getHeaders());
+      $link_relation_type_manager = $this->container->get('plugin.manager.link_relation_type');
+      $expected_link_relation_headers = array_map(function ($rel) use ($link_relation_type_manager) {
+        $definition = $link_relation_type_manager->getDefinition($rel, FALSE);
+        return (!empty($definition['uri']))
+          ? $definition['uri']
+          : $rel;
+      }, array_keys($this->entity->getEntityType()->getLinkTemplates()));
+      $parse_rel_from_link_header = function ($value) use ($link_relation_type_manager) {
+        $matches = [];
+        if (preg_match('/rel="([^"]+)"/', $value, $matches) === 1) {
+          return $matches[1];
+        }
+        return FALSE;
+      };
+      $this->assertSame($expected_link_relation_headers, array_map($parse_rel_from_link_header, $response->getHeader('Link')));
+    }
     $get_headers = $response->getHeaders();
 
     // Verify that the GET and HEAD responses are the same. The only difference
@@ -544,8 +537,7 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
     $parseable_valid_request_body   = $this->serializer->encode($this->getNormalizedPostEntity(), static::$format);
     $parseable_valid_request_body_2 = $this->serializer->encode($this->getNormalizedPostEntity(), static::$format);
     $parseable_invalid_request_body   = $this->serializer->encode($this->makeNormalizationInvalid($this->getNormalizedPostEntity()), static::$format);
-    // @todo Change to ['uuid' => UUID] in https://www.drupal.org/node/2820743.
-    $parseable_invalid_request_body_2 = $this->serializer->encode($this->getNormalizedPostEntity() + ['uuid' => [['value' => $this->randomMachineName(129)]]], static::$format);
+    $parseable_invalid_request_body_2 = $this->serializer->encode($this->getNormalizedPostEntity() + ['uuid' => [$this->randomMachineName(129)]], static::$format);
     $parseable_invalid_request_body_3 = $this->serializer->encode($this->getNormalizedPostEntity() + ['field_rest_test' => [['value' => $this->randomString()]]], static::$format);
 
     // The URL and Guzzle request options that will be used in this test. The
@@ -688,7 +680,8 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
     // 201 for well-formed request.
     $response = $this->request('POST', $url, $request_options);
     $this->assertResourceResponse(201, FALSE, $response);
-    $this->assertSame([str_replace($this->entity->id(), static::$firstCreatedEntityId, $this->entity->toUrl('canonical')->setAbsolute(TRUE)->toString())], $response->getHeader('Location'));
+    $location = $this->entityStorage->load(static::$firstCreatedEntityId)->toUrl('canonical')->setAbsolute(TRUE)->toString();
+    $this->assertSame([$location], $response->getHeader('Location'));
     $this->assertFalse($response->hasHeader('X-Drupal-Cache'));
 
 
@@ -708,7 +701,8 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
     // 201 for well-formed request.
     $response = $this->request('POST', $url, $request_options);
     $this->assertResourceResponse(201, FALSE, $response);
-    $this->assertSame([str_replace($this->entity->id(), static::$secondCreatedEntityId, $this->entity->toUrl('canonical')->setAbsolute(TRUE)->toString())], $response->getHeader('Location'));
+    $location = $this->entityStorage->load(static::$secondCreatedEntityId)->toUrl('canonical')->setAbsolute(TRUE)->toString();
+    $this->assertSame([$location], $response->getHeader('Location'));
     $this->assertFalse($response->hasHeader('X-Drupal-Cache'));
   }
 

@@ -2,8 +2,6 @@
 /**
  * Parses and verifies the doc comments for functions.
  *
- * PHP version 5
- *
  * @category PHP
  * @package  PHP_CodeSniffer
  * @link     http://pear.php.net/package/PHP_CodeSniffer
@@ -25,24 +23,25 @@ class Drupal_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_S
      *
      * @var array
      */
-    protected $invalidTypes = array(
-                               'Array'    => 'array',
-                               'array()'  => 'array',
-                               'boolean'  => 'bool',
-                               'Boolean'  => 'bool',
-                               'integer'  => 'int',
-                               'str'      => 'string',
-                               'stdClass' => 'object',
-                               'number'   => 'int',
-                               'String'   => 'string',
-                               'type'     => 'string or int or object...',
-                               'NULL'     => 'null',
-                               'FALSE'    => 'false',
-                               'TRUE'     => 'true',
-                               'Bool'     => 'bool',
-                               'Int'      => 'int',
-                               'Integer'  => 'int',
-                              );
+    public static $invalidTypes = array(
+                                   'Array'    => 'array',
+                                   'array()'  => 'array',
+                                   '[]'       => 'array',
+                                   'boolean'  => 'bool',
+                                   'Boolean'  => 'bool',
+                                   'integer'  => 'int',
+                                   'str'      => 'string',
+                                   'stdClass' => 'object',
+                                   'number'   => 'int',
+                                   'String'   => 'string',
+                                   'type'     => 'mixed',
+                                   'NULL'     => 'null',
+                                   'FALSE'    => 'false',
+                                   'TRUE'     => 'true',
+                                   'Bool'     => 'bool',
+                                   'Int'      => 'int',
+                                   'Integer'  => 'int',
+                                  );
 
     /**
      * An array of variable types for param/var we will check.
@@ -51,12 +50,8 @@ class Drupal_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_S
      */
     public $allowedTypes = array(
                             'array',
-                            'bool',
-                            'float',
-                            'int',
                             'mixed',
                             'object',
-                            'string',
                             'resource',
                             'callable',
                            );
@@ -213,11 +208,11 @@ class Drupal_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_S
         $type = null;
         if ($isSpecialMethod === false && $methodName !== $className) {
             if ($return !== null) {
-                $type = $tokens[($return + 2)]['content'];
+                $type = trim($tokens[($return + 2)]['content']);
                 if (empty($type) === true || $tokens[($return + 2)]['code'] !== T_DOC_COMMENT_STRING) {
                     $error = 'Return type missing for @return tag in function comment';
                     $phpcsFile->addError($error, $return, 'MissingReturnType');
-                } else {
+                } else if (strpos($type, ' ') === false) {
                     // Check return type (can be multiple, separated by '|').
                     $typeNames      = explode('|', $type);
                     $suggestedNames = array();
@@ -232,7 +227,7 @@ class Drupal_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_S
                             $hasNull = true;
                         }
 
-                        $suggestedName = $this->suggestType($typeName);
+                        $suggestedName = static::suggestType($typeName);
                         if (in_array($suggestedName, $suggestedNames) === false) {
                             $suggestedNames[] = $suggestedName;
                         }
@@ -240,19 +235,17 @@ class Drupal_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_S
 
                     $suggestedType = implode('|', $suggestedNames);
                     if ($type !== $suggestedType) {
-                        $error = 'Function return type "%s" is invalid';
                         $error = 'Expected "%s" but found "%s" for function return type';
                         $data  = array(
                                   $suggestedType,
                                   $type,
                                  );
-                        $phpcsFile->addError($error, $return, 'InvalidReturn', $data);
-                    }
-
-                    if ($type[0] === '$' && $type !== '$this') {
-                        $error = '@return data type must not contain "$"';
-                        $phpcsFile->addError($error, $return, '$InReturnType');
-                    }
+                        $fix   = $phpcsFile->addFixableError($error, $return, 'InvalidReturn', $data);
+                        if ($fix === true) {
+                            $content = $suggestedType;
+                            $phpcsFile->fixer->replaceToken(($return + 2), $content);
+                        }
+                    }//end if
 
                     if ($type === 'void') {
                         $error = 'If there is no return value for a function, there must not be a @return tag.';
@@ -332,6 +325,19 @@ class Drupal_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_S
                     }
 
                     $phpcsFile->addError($error, $return, 'MissingReturnComment');
+                } else if (strpos($type, ' ') !== false) {
+                    if (preg_match('/^([^\s]+)[\s]+(\$[^\s]+)[\s]*$/', $type, $matches) === 1) {
+                        $error = 'Return type must not contain variable name "%s"';
+                        $data  = array($matches[2]);
+                        $fix   = $phpcsFile->addFixableError($error, ($return + 2), 'ReturnVarName', $data);
+                        if ($fix === true) {
+                            $phpcsFile->fixer->replaceToken(($return + 2), $matches[1]);
+                        }
+                    } else {
+                        $error = 'Return type "%s" must not contain spaces';
+                        $data  = array($type);
+                        $phpcsFile->addError($error, $return, 'ReturnTypeSpaces', $data);
+                    }
                 }//end if
             }//end if
         } else {
@@ -598,18 +604,22 @@ class Drupal_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_S
             $typeNames      = explode('|', $param['type']);
             $suggestedNames = array();
             foreach ($typeNames as $i => $typeName) {
-                $suggestedNames[] = $this->suggestType($typeName);
+                $suggestedNames[] = static::suggestType($typeName);
             }
 
             $suggestedType = implode('|', $suggestedNames);
-            if ($param['type'] !== $suggestedType) {
+            if (preg_match('/\s/', $param['type']) === 1) {
+                $error = 'Parameter type "%s" must not contain spaces';
+                $data  = array($param['type']);
+                $phpcsFile->addError($error, $param['tag'], 'ParamTypeSpaces', $data);
+            } else if ($param['type'] !== $suggestedType) {
                 $error = 'Expected "%s" but found "%s" for parameter type';
                 $data  = array(
                           $suggestedType,
                           $param['type'],
                          );
                 $fix   = $phpcsFile->addFixableError($error, $param['tag'], 'IncorrectParamVarName', $data);
-                if ($fix === true && $phpcsFile->fixer->enabled === true) {
+                if ($fix === true) {
                     $content  = $suggestedType;
                     $content .= str_repeat(' ', $param['type_space']);
                     $content .= $param['var'];
@@ -619,7 +629,7 @@ class Drupal_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_S
 
             if (count($typeNames) === 1) {
                 $typeName      = $param['type'];
-                $suggestedName = $this->suggestType($typeName);
+                $suggestedName = static::suggestType($typeName);
             }
 
             // This runs only if there is only one type name and the type name
@@ -641,8 +651,8 @@ class Drupal_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_S
 
                 if ($suggestedTypeHint !== '' && isset($realParams[$checkPos]) === true) {
                     $typeHint = $realParams[$checkPos]['type_hint'];
-                    // Array type hints are allowed to be omitted.
-                    if ($typeHint === '' && $suggestedTypeHint !== 'array') {
+                    // Primitive type hints are allowed to be omitted.
+                    if ($typeHint === '' && in_array($suggestedTypeHint, ['string', 'int', 'float', 'bool']) === false) {
                         $error = 'Type hint "%s" missing for %s';
                         $data  = array(
                                   $suggestedTypeHint,
@@ -691,7 +701,7 @@ class Drupal_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_S
                          );
 
                 $fix = $phpcsFile->addFixableError($error, $param['tag'], 'SpacingAfterParamType', $data);
-                if ($fix === true && $phpcsFile->fixer->enabled === true) {
+                if ($fix === true) {
                     $phpcsFile->fixer->beginChangeset();
 
                     $content  = $param['type'];
@@ -842,11 +852,17 @@ class Drupal_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_S
      *
      * @return string
      */
-    protected function suggestType($type)
+    public static function suggestType($type)
     {
-        if (isset($this->invalidTypes[$type]) === true) {
-            return $this->invalidTypes[$type];
+        if (isset(static::$invalidTypes[$type]) === true) {
+            return static::$invalidTypes[$type];
         }
+
+        if ($type === '$this') {
+            return $type;
+        }
+
+        $type = preg_replace('/[^a-zA-Z0-9_\\\[\]]/', '', $type);
 
         return $type;
 
