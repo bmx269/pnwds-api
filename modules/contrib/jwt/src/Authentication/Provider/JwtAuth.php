@@ -1,27 +1,18 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\jwt\Authentication\Provider\JwtAuth.
- */
-
 namespace Drupal\jwt\Authentication\Provider;
 
-use Drupal\jwt\JsonWebToken\JsonWebTokenInterface;
-
-use Drupal\jwt\Validator\JwtInvalidException;
-use Drupal\jwt\Validator\JwtValidatorInterface;
-
-use Drupal\jwt\Authentication\Provider\JwtAuthEvent;
-use Drupal\jwt\Authentication\Provider\JwtAuthEvents;
-
+use Drupal\jwt\Transcoder\JwtTranscoderInterface;
+use Drupal\jwt\Transcoder\JwtDecodeException;
+use Drupal\jwt\Authentication\Event\JwtAuthGenerateEvent;
+use Drupal\jwt\Authentication\Event\JwtAuthValidateEvent;
+use Drupal\jwt\Authentication\Event\JwtAuthValidEvent;
+use Drupal\jwt\Authentication\Event\JwtAuthEvents;
+use Drupal\jwt\JsonWebToken\JsonWebToken;
 use Drupal\Core\Authentication\AuthenticationProviderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
@@ -37,11 +28,11 @@ class JwtAuth implements AuthenticationProviderInterface {
   protected $entityTypeManager;
 
   /**
-   * The JWT Validator service.
+   * The JWT Transcoder service.
    *
-   * @var \Drupal\jwt\JwtValidatorInterface
+   * @var \Drupal\jwt\Transcoder\JwtTranscoderInterface
    */
-  protected $validator;
+  protected $transcoder;
 
   /**
    * The event dispatcher.
@@ -55,56 +46,91 @@ class JwtAuth implements AuthenticationProviderInterface {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The user authentication service.
-   * @param \Drupal\jwt\JwtValidatorInterface
-   *   The jwt validator service.
+   * @param \Drupal\jwt\Transcoder\JwtTranscoderInterface $transcoder
+   *   The jwt transcoder service.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, JwtValidatorInterface $validator, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    JwtTranscoderInterface $transcoder,
+    EventDispatcherInterface $event_dispatcher
+  ) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->validator = $validator;
+    $this->transcoder = $transcoder;
     $this->eventDispatcher = $event_dispatcher;
   }
 
   /**
    * {@inheritdoc}
    */
-	public function applies(Request $request) {
+  public function applies(Request $request) {
     $auth = $request->headers->get('Authorization');
-		return preg_match('/^Bearer .+/', $auth);
-	}
+    return preg_match('/^Bearer .+/', $auth);
+  }
 
   /**
    * {@inheritdoc}
    */
-	public function authenticate(Request $request) {
+  public function authenticate(Request $request) {
+    $raw_jwt = $this->getJwtFromRequest($request);
+
+    // Decode JWT and validate signature.
     try {
-      $jwt = $this->validator->getJwt($request);
-    } catch (JwtInvalidException $e) {
+      $jwt = $this->transcoder->decode($raw_jwt);
+    }
+    catch (JwtDecodeException $e) {
       throw new AccessDeniedHttpException($e->getMessage(), $e);
-      return null;
     }
 
-    if (!$user = $this->getUser($jwt)) {
+    $validate = new JwtAuthValidateEvent($jwt);
+    // Signature is validated, but allow modules to do additional validation.
+    $this->eventDispatcher->dispatch(JwtAuthEvents::VALIDATE, $validate);
+    if (!$validate->isValid()) {
+      throw new AccessDeniedHttpException($validate->invalidReason());
+    }
+
+    $valid = new JwtAuthValidEvent($jwt);
+    $this->eventDispatcher->dispatch(JwtAuthEvents::VALID, $valid);
+    $user = $valid->getUser();
+
+    if (!$user) {
       throw new AccessDeniedHttpException('Unable to load user from provided JWT.');
-      return null;
     }
 
     return $user;
-	}
+  }
 
   /**
-   * Allow the system to interpret token and provide a user id.
+   * Generate a new JWT token calling all event handlers.
    *
-   * @param \Drupal\jwt\JsonWebToken\JsonWebTokenInterface $jwt
-   *
-   * @return mixed $uid
-   *  A loaded user object.
+   * @return string|bool
+   *   The encoded JWT token. False if there is a problem encoding.
    */
-  private function getUser(JsonWebTokenInterface $jwt) {
-    $event = new JwtAuthEvent($jwt);
-    $this->eventDispatcher->dispatch(JwtAuthEvents::VALID, $event);
-    return $event->getUser();
+  public function generateToken() {
+    $event = new JwtAuthGenerateEvent(new JsonWebToken());
+    $this->eventDispatcher->dispatch(JwtAuthEvents::GENERATE, $event);
+    $jwt = $event->getToken();
+    return $this->transcoder->encode($jwt);
+  }
+
+  /**
+   * Gets a raw JsonWebToken from the current request.
+   *
+   * @param Request $request
+   *   The request.
+   *
+   * @return string|bool
+   *   Raw JWT String if on request, false if not.
+   */
+  protected function getJwtFromRequest(Request $request) {
+    $auth_header = $request->headers->get('Authorization');
+    $matches = array();
+    if (!$hasJWT = preg_match('/^Bearer (.*)/', $auth_header, $matches)) {
+      return FALSE;
+    }
+
+    return $matches[1];
   }
 
 }

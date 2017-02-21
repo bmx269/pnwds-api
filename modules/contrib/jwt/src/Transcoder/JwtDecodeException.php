@@ -1,14 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\jwt\Trancoder\JwtDecodeException.
- */
-
 namespace Drupal\jwt\Transcoder;
 
-use Firebase\JWT\DomainException;
-use Firebase\JWT\UnexpectedValueException;
 use Firebase\JWT\SignatureInvalidException;
 use Firebase\JWT\BeforeValidException;
 use Firebase\JWT\ExpiredException;
@@ -28,24 +21,30 @@ class JwtDecodeException extends \Exception {
   const UNKNOWN           = 6;
 
   /**
-   * Contruct a new decode exception from a php-jwt exception.
+   * Construct a new decode exception from a php-jwt exception.
+   *
+   * @param \Exception $e
+   *   The exception to decode.
+   *
+   * @return JwtDecodeException
+   *   The decode exception.
    */
   public static function newFromException(\Exception $e) {
     switch ($e) {
-    case ($e instanceof DomainException):
-      return new static($e->getMessage(), self::DOMAIN, $e);
-    case ($e instanceof UnexpectedValueException):
-      return new static($e->getMessage(), self::UNEXPECTED_VALUE, $e);
-    case ($e instanceof SignatureInvalidException):
-      return new static($e->getMessage(), self::SIGNATURE_INVALID, $e);
-    case ($e instanceof BeforeValidException):
-      return new static($e->getMessage(), self::BEFORE_VALID, $e);
-    case ($e instanceof ExpiredException):
-      return new static($e->getMessage(), self::EXPIRED, $e);
-    case ($e instanceof \Exception):
-      return new static('Internal Server Error', self::UNKNOWN, $e);
-    default:
-      return new static('Internal Server Error', self::UNKNOWN, $e);
+      case ($e instanceof SignatureInvalidException):
+        return new static($e->getMessage(), self::SIGNATURE_INVALID, $e);
+
+      case ($e instanceof BeforeValidException):
+        return new static($e->getMessage(), self::BEFORE_VALID, $e);
+
+      case ($e instanceof ExpiredException):
+        return new static($e->getMessage(), self::EXPIRED, $e);
+
+      case ($e instanceof \Exception):
+        return new static('Internal Server Error', self::UNKNOWN, $e);
+
+      default:
+        return new static('Internal Server Error', self::UNKNOWN, $e);
     }
   }
 
