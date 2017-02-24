@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\jwt\JsonWebToken\JsonWebToken.
+ */
+
 namespace Drupal\jwt\JsonWebToken;
 
 /**
@@ -16,14 +21,8 @@ class JsonWebToken implements JsonWebTokenInterface {
    */
   protected $payload;
 
-  /**
-   * JsonWebToken constructor.
-   *
-   * @param object $jwt
-   *   The Object to turn into a JWT.
-   */
-  public function __construct($jwt = NULL) {
-    $jwt = (is_null($jwt)) ? new \stdClass() : $jwt;
+  public function __construct($jwt = null) {
+    $jwt = (is_null($jwt)) ? new \stdclass() : $jwt;
     $this->payload = $jwt;
   }
 
@@ -39,7 +38,7 @@ class JsonWebToken implements JsonWebTokenInterface {
    */
   public function getClaim($claim) {
     $payload = $this->payload;
-    return $this->internalGetClaim($payload, $claim);
+    return $this->_getClaim($payload, $claim);
   }
 
   /**
@@ -47,7 +46,7 @@ class JsonWebToken implements JsonWebTokenInterface {
    */
   public function setClaim($claim, $value) {
     $payload = $this->payload;
-    $this->internalSetClaim($payload, $claim, $value);
+    $this->_setClaim($payload, $claim, $value);
     $this->payload = $payload;
   }
 
@@ -56,7 +55,7 @@ class JsonWebToken implements JsonWebTokenInterface {
    */
   public function unsetClaim($claim) {
     $payload = $this->payload;
-    $this->internalUnsetClaim($payload, $claim);
+    $this->_unsetClaim($payload, $claim, $value);
     $this->payload = $payload;
   }
 
@@ -64,23 +63,20 @@ class JsonWebToken implements JsonWebTokenInterface {
    * Traverses the JWT payload to the given claim and returns its value.
    *
    * @param object $payload
-   *   A reference to the JWT payload.
+   *  A reference to the JWT payload.
    * @param mixed $claim
-   *   Either a string or indexed array of strings representing the claim or
-   *   nested claim to be set.
-   *
-   * @return mixed
-   *   The claims value.
+   *  Either a string or indexed array of strings representing the claim or
+   *  nested claim to be set.
    */
-  protected function internalGetClaim(&$payload, $claim) {
+  protected function _getClaim(&$payload, $claim) {
     $current_claim = (is_array($claim)) ? array_shift($claim) : $claim;
 
     if (!isset($payload->$current_claim)) {
-      return NULL;
+      return null;
     }
 
     if (is_array($claim) && count($claim) > 0) {
-      return $this->internalGetClaim($payload->$current_claim, $claim);
+      return $this->_getClaim($payload->$current_claim, $claim);
     }
     else {
       return $payload->$current_claim;
@@ -91,22 +87,22 @@ class JsonWebToken implements JsonWebTokenInterface {
    * Traverses the JWT payload to the given claim and sets a value.
    *
    * @param object $payload
-   *   A reference to the JWT payload.
+   *  A reference to the JWT payload.
    * @param mixed $claim
-   *   Either a string or indexed array of strings representing the claim or
-   *   nested claim to be set.
+   *  Either a string or indexed array of strings representing the claim or
+   *  nested claim to be set.
    * @param mixed $value
-   *   The value to set for the given claim.
+   *  The value to set for the given claim.
    */
-  protected function internalSetClaim(&$payload, $claim, $value) {
+  protected function _setClaim(&$payload, $claim, $value) {
     $current_claim = (is_array($claim)) ? array_shift($claim) : $claim;
 
     if (is_array($claim) && count($claim) > 0) {
       if (!isset($payload->$current_claim)) {
-        $payload->$current_claim = new \stdClass();
+        $payload->$current_claim = new \stdclass();
       }
 
-      $this->internalSetClaim($payload->$current_claim, $claim, $value);
+      $this->_setClaim($payload->$current_claim, $claim, $value);
     }
     else {
       $payload->$current_claim = $value;
@@ -114,15 +110,15 @@ class JsonWebToken implements JsonWebTokenInterface {
   }
 
   /**
-   * Traverses the JWT payload to the given claim and unset its value.
+   * Traverses the JWT payload to the given claim and unsets its value.
    *
    * @param object $payload
-   *   A reference to the JWT payload.
+   *  A reference to the JWT payload.
    * @param mixed $claim
-   *   Either a string or indexed array of strings representing the claim or
-   *   nested claim to be set.
+   *  Either a string or indexed array of strings representing the claim or
+   *  nested claim to be set.
    */
-  protected function internalUnsetClaim(&$payload, $claim) {
+  protected function _unsetClaim(&$payload, $claim) {
     $current_claim = (is_array($claim)) ? array_shift($claim) : $claim;
 
     if (!isset($payload->$current_claim)) {
@@ -130,7 +126,7 @@ class JsonWebToken implements JsonWebTokenInterface {
     }
 
     if (is_array($claim) && count($claim) > 0) {
-      $this->internalUnsetClaim($payload->$current_claim, $claim);
+      $this->_unsetClaim($payload->$current_claim, $claim);
     }
     else {
       unset($payload->$current_claim);

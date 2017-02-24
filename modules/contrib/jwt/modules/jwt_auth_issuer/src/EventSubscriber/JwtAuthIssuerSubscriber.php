@@ -1,10 +1,16 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\jwt_auth_issuer\JwtAuthIssuerSubscriber.
+ */
+
 namespace Drupal\jwt_auth_issuer\EventSubscriber;
 
 use Drupal\Core\Session\AccountInterface;
-use Drupal\jwt\Authentication\Event\JwtAuthEvents;
-use Drupal\jwt\Authentication\Event\JwtAuthGenerateEvent;
+use Drupal\jwt_auth_issuer\Controller\JwtAuthIssuerEvent;
+use Drupal\jwt_auth_issuer\Controller\JwtAuthIssuerEvents;
+
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -25,7 +31,7 @@ class JwtAuthIssuerSubscriber implements EventSubscriberInterface {
    * Constructor.
    *
    * @param \Drupal\Core\Session\AccountInterface $user
-   *   The current user.
+   *  The current user.
    */
   public function __construct(AccountInterface $user) {
     $this->currentUser = $user;
@@ -34,19 +40,18 @@ class JwtAuthIssuerSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
-    $events[JwtAuthEvents::GENERATE][] = ['setStandardClaims', 100];
-    $events[JwtAuthEvents::GENERATE][] = ['setDrupalClaims', 99];
+  static function getSubscribedEvents() {
+    $events[JwtAuthIssuerEvents::GENERATE][] = array('setStandardClaims', 100);
+    $events[JwtAuthIssuerEvents::GENERATE][] = array('setDrupalClaims', 99);
     return $events;
   }
 
   /**
    * Sets the standard claims set for a JWT.
    *
-   * @param \Drupal\jwt\Authentication\Event\JwtAuthGenerateEvent $event
-   *   The event.
+   * @param \Drupal\jwt_auth_issuer\Controller\JwtAuthIssuerEvent $event
    */
-  public function setStandardClaims(JwtAuthGenerateEvent $event) {
+  public function setStandardClaims($event) {
     $event->addClaim('iat', time());
     // @todo: make these more configurable.
     $event->addClaim('exp', strtotime('+1 hour'));
@@ -55,12 +60,14 @@ class JwtAuthIssuerSubscriber implements EventSubscriberInterface {
   /**
    * Sets claims for a Drupal consumer on the JWT.
    *
-   * @param \Drupal\jwt\Authentication\Event\JwtAuthGenerateEvent $event
-   *   The event.
+   * @param \Drupal\jwt_auth_issuer\Controller\JwtAuthIssuerEvent $event
    */
-  public function setDrupalClaims(JwtAuthGenerateEvent $event) {
+  public function setDrupalClaims($event) {
     $event->addClaim(
-      ['drupal', 'uid'],
+      array(
+        0 => 'drupal',
+        1 => 'uid'
+      ),
       $this->currentUser->id()
     );
   }
