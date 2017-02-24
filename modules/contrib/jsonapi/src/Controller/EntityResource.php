@@ -250,8 +250,7 @@ class EntityResource {
     // Instantiate the query for the filtering.
     $entity_type_id = $this->resourceType->getEntityTypeId();
 
-    $route_params = $request->attributes->get('_route_params');
-    $params = isset($route_params['_json_api_params']) ? $route_params['_json_api_params'] : [];
+    $params = $request->attributes->get('_route_params[_json_api_params]', NULL, TRUE);
     $query = $this->getCollectionQuery($entity_type_id, $params);
 
     $results = $query->execute();
