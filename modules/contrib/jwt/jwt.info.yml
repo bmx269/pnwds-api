@@ -3,14 +3,12 @@ type: module
 description: Provides functionality for issuing, validating, and authenticating with JSON Web Tokens.
 # core: 8.x
 package: Web services
-
 configure: jwt.jwt_config_form
-
 dependencies:
-  - key
+  - key:key
 
-# Information added by Drupal.org packaging script on 2016-07-19
-version: '8.x-1.0-alpha4'
+# Information added by Drupal.org packaging script on 2017-02-23
+version: '8.x-1.0-alpha6'
 core: '8.x'
 project: 'jwt'
-datestamp: 1468966144
+datestamp: 1487876585

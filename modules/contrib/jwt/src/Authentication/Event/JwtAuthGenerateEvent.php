@@ -1,15 +1,13 @@
 <?php
 
+namespace Drupal\jwt\Authentication\Event;
+
 /**
- * @file
- * Contains \Drupal\jwt_auth_issuer\Controller\JwtAuthIssuerEvent.
+ * Class JwtAuthGenerateEvent.
+ *
+ * @package Drupal\jwt\Authentication\Event
  */
-
-namespace Drupal\jwt_auth_issuer\Controller;
-
-use Drupal\jwt\Authentication\Provider\JwtAuthEvent;
-
-class JwtAuthIssuerEvent extends JwtAuthEvent {
+class JwtAuthGenerateEvent extends JwtAuthBaseEvent {
 
   /**
    * Adds a claim to a JsonWebToken.
@@ -25,8 +23,8 @@ class JwtAuthIssuerEvent extends JwtAuthEvent {
    *
    * @see \Drupal\jwt\JsonWebToken\JsonWebTokenInterface::unsetClaim()
    */
-  public function removeClaim($claim, $value) {
-    $this->jwt->removeClaim($claim);
+  public function removeClaim($claim) {
+    $this->jwt->unsetClaim($claim);
   }
 
 }
