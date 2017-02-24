@@ -68,7 +68,7 @@ class CorsAdminForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $domains = explode("\n",  $form_state->getValue('cors_domains'), 2);
+    $domains = explode("\n",  $form_state->getValue('cors_domains'));
     $settings = array();
     foreach ($domains as $domain) {
       $domain = explode("|", $domain, 2);
