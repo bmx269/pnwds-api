@@ -35,7 +35,6 @@ use Drupal\user\UserInterface;
  *   base_table = "block_content",
  *   revision_table = "block_content_revision",
  *   data_table = "block_content_field_data",
- *   show_revision_ui = TRUE,
  *   links = {
  *     "canonical" = "/block/{block_content}",
  *     "delete-form" = "/block/{block_content}/delete",
@@ -183,14 +182,7 @@ class BlockContent extends ContentEntityBase implements BlockContentInterface {
     $fields['revision_log'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Revision log message'))
       ->setDescription(t('The log entry explaining the changes in this revision.'))
-      ->setRevisionable(TRUE)
-      ->setDisplayOptions('form', array(
-        'type' => 'string_textarea',
-        'weight' => 25,
-        'settings' => array(
-          'rows' => 4,
-        ),
-      ));
+      ->setRevisionable(TRUE);
 
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))

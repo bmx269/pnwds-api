@@ -20,6 +20,15 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
   protected $cache = array();
 
   /**
+   * Constructs a MemoryBackend object.
+   *
+   * @param string $bin
+   *   The cache bin for which the object is created.
+   */
+  public function __construct($bin) {
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function get($cid, $allow_invalid = FALSE) {
@@ -150,9 +159,7 @@ class MemoryBackend implements CacheBackendInterface, CacheTagsInvalidatorInterf
    */
   public function invalidateMultiple(array $cids) {
     foreach ($cids as $cid) {
-      if (isset($this->cache[$cid])) {
-        $this->cache[$cid]->expire = $this->getRequestTime() - 1;
-      }
+      $this->cache[$cid]->expire = $this->getRequestTime() - 1;
     }
   }
 

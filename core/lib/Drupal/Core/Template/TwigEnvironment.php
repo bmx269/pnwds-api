@@ -4,7 +4,6 @@ namespace Drupal\Core\Template;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\Core\State\StateInterface;
 
 /**
  * A class that defines a Twig environment for Drupal.
@@ -23,8 +22,6 @@ class TwigEnvironment extends \Twig_Environment {
    */
   protected $templateClasses;
 
-  protected $twigCachePrefix = '';
-
   /**
    * Constructs a TwigEnvironment object and stores cache and storage
    * internally.
@@ -35,14 +32,12 @@ class TwigEnvironment extends \Twig_Environment {
    *   The cache bin.
    * @param string $twig_extension_hash
    *   The Twig extension hash.
-   * @param \Drupal\Core\State\StateInterface $state
-   *   The state service.
    * @param \Twig_LoaderInterface $loader
    *   The Twig loader or loader chain.
    * @param array $options
    *   The options for the Twig environment.
    */
-  public function __construct($root, CacheBackendInterface $cache, $twig_extension_hash, StateInterface $state, \Twig_LoaderInterface $loader = NULL, $options = array()) {
+  public function __construct($root, CacheBackendInterface $cache, $twig_extension_hash, \Twig_LoaderInterface $loader = NULL, $options = array()) {
     // Ensure that twig.engine is loaded, given that it is needed to render a
     // template because functions like TwigExtension::escapeFilter() are called.
     require_once $root . '/core/themes/engines/twig/twig.engine';
@@ -63,33 +58,11 @@ class TwigEnvironment extends \Twig_Environment {
     $this->addExtension($sandbox);
 
     if ($options['cache'] === TRUE) {
-      $current = $state->get('twig_extension_hash_prefix', ['twig_extension_hash' => '']);
-      if ($current['twig_extension_hash'] !== $twig_extension_hash || empty($current['twig_cache_prefix'])) {
-        $current = [
-          'twig_extension_hash' => $twig_extension_hash,
-          // Generate a new prefix which invalidates any existing cached files.
-          'twig_cache_prefix' => uniqid(),
-
-        ];
-        $state->set('twig_extension_hash_prefix', $current);
-      }
-      $this->twigCachePrefix = $current['twig_cache_prefix'];
-
-      $options['cache'] = new TwigPhpStorageCache($cache, $this->twigCachePrefix);
+      $options['cache'] = new TwigPhpStorageCache($cache, $twig_extension_hash);
     }
 
     $this->loader = $loader;
     parent::__construct($this->loader, $options);
-  }
-
-  /**
-   * Get the cache prefixed used by \Drupal\Core\Template\TwigPhpStorageCache
-   *
-   * @return string
-   *   The file cache prefix, or empty string if the cache is disabled.
-   */
-  public function getTwigCachePrefix() {
-    return $this->twigCachePrefix;
   }
 
   /**

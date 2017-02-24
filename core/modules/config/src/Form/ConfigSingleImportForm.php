@@ -7,7 +7,6 @@ use Drupal\config\StorageReplaceDataWrapper;
 use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Config\ConfigImporterException;
 use Drupal\Core\Config\ConfigManagerInterface;
-use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Config\StorageComparer;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
@@ -222,7 +221,7 @@ class ConfigSingleImportForm extends ConfirmFormBase {
 
     $entity_types = array();
     foreach ($this->entityManager->getDefinitions() as $entity_type => $definition) {
-      if ($definition->entityClassImplements(ConfigEntityInterface::class)) {
+      if ($definition->isSubclassOf('Drupal\Core\Config\Entity\ConfigEntityInterface')) {
         $entity_types[$entity_type] = $definition->getLabel();
       }
     }

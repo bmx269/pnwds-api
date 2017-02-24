@@ -3,7 +3,6 @@
 namespace Drupal\Tests\hal\Kernel;
 
 use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 use Drupal\node\Entity\NodeType;
 
@@ -45,7 +44,7 @@ class EntityTranslationNormalizeTest extends NormalizerTestBase {
       'title' => $this->randomMachineName(),
       'uid' => $user->id(),
       'type' => $node_type->id(),
-      'status' => NodeInterface::PUBLISHED,
+      'status' => NODE_PUBLISHED,
       'langcode' => 'en',
       'promote' => 1,
       'sticky' => 0,

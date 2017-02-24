@@ -185,10 +185,8 @@ class DisplayBlockTest extends ViewTestBase {
     // Test that that machine name field is hidden from display and has been
     // saved as expected from the default value.
     $this->assertNoFieldById('edit-machine-name', 'views_block__test_view_block_1', 'The machine name is hidden on the views block form.');
-
     // Save the block.
-    $edit = ['region' => 'content'];
-    $this->drupalPostForm(NULL, $edit, t('Save block'));
+    $this->drupalPostForm(NULL, array(), t('Save block'));
     $storage = $this->container->get('entity_type.manager')->getStorage('block');
     $block = $storage->load('views_block__test_view_block_block_1');
     // This will only return a result if our new block has been created with the
@@ -197,7 +195,7 @@ class DisplayBlockTest extends ViewTestBase {
 
     for ($i = 2; $i <= 3; $i++) {
       // Place the same block again and make sure we have a new ID.
-      $this->drupalPostForm('admin/structure/block/add/views_block:test_view_block-block_1/' . $default_theme, $edit, t('Save block'));
+      $this->drupalPostForm('admin/structure/block/add/views_block:test_view_block-block_1/' . $default_theme, array(), t('Save block'));
       $block = $storage->load('views_block__test_view_block_block_1_' . $i);
       // This will only return a result if our new block has been created with the
       // expected machine name.
@@ -206,7 +204,7 @@ class DisplayBlockTest extends ViewTestBase {
 
     // Tests the override capability of items per page.
     $this->drupalGet('admin/structure/block/add/views_block:test_view_block-block_1/' . $default_theme);
-    $edit = ['region' => 'content'];
+    $edit = array();
     $edit['settings[override][items_per_page]'] = 10;
 
     $this->drupalPostForm('admin/structure/block/add/views_block:test_view_block-block_1/' . $default_theme, $edit, t('Save block'));
@@ -224,7 +222,7 @@ class DisplayBlockTest extends ViewTestBase {
     $this->assertEqual(5, $config['items_per_page'], "'Items per page' is properly saved.");
 
     // Tests the override of the label capability.
-    $edit = ['region' => 'content'];
+    $edit = array();
     $edit['settings[views_label_checkbox]'] = 1;
     $edit['settings[views_label]'] = 'Custom title';
     $this->drupalPostForm('admin/structure/block/add/views_block:test_view_block-block_1/' . $default_theme, $edit, t('Save block'));
@@ -262,7 +260,7 @@ class DisplayBlockTest extends ViewTestBase {
     $result = $this->xpath('//div[contains(@class, "region-sidebar-first")]/div[contains(@class, "block-views")]/h2');
     $this->assertTrue(empty($result), 'The title is not visible.');
 
-    $this->assertCacheTags(array_merge($block->getCacheTags(), ['block_view', 'config:block_list', 'config:system.site', 'config:views.view.test_view_block' , 'http_response', 'rendered']));
+    $this->assertCacheTags(array_merge($block->getCacheTags(), ['block_view', 'config:block_list', 'config:system.site', 'config:views.view.test_view_block' , 'rendered']));
   }
 
   /**
@@ -288,7 +286,7 @@ class DisplayBlockTest extends ViewTestBase {
     $this->assertEqual(0, count($this->xpath('//div[contains(@class, "block-views-blocktest-view-block-block-1")]')));
     // Ensure that the view cachability metadata is propagated even, for an
     // empty block.
-    $this->assertCacheTags(array_merge($block->getCacheTags(), ['block_view', 'config:block_list', 'config:views.view.test_view_block' , 'http_response', 'rendered']));
+    $this->assertCacheTags(array_merge($block->getCacheTags(), ['block_view', 'config:block_list', 'config:views.view.test_view_block' , 'rendered']));
     $this->assertCacheContexts(['url.query_args:_wrapper_format']);
 
     // Add a header displayed on empty result.
@@ -306,7 +304,7 @@ class DisplayBlockTest extends ViewTestBase {
 
     $this->drupalGet($url);
     $this->assertEqual(1, count($this->xpath('//div[contains(@class, "block-views-blocktest-view-block-block-1")]')));
-    $this->assertCacheTags(array_merge($block->getCacheTags(), ['block_view', 'config:block_list', 'config:views.view.test_view_block' , 'http_response', 'rendered']));
+    $this->assertCacheTags(array_merge($block->getCacheTags(), ['block_view', 'config:block_list', 'config:views.view.test_view_block' , 'rendered']));
     $this->assertCacheContexts(['url.query_args:_wrapper_format']);
 
     // Hide the header on empty results.
@@ -324,7 +322,7 @@ class DisplayBlockTest extends ViewTestBase {
 
     $this->drupalGet($url);
     $this->assertEqual(0, count($this->xpath('//div[contains(@class, "block-views-blocktest-view-block-block-1")]')));
-    $this->assertCacheTags(array_merge($block->getCacheTags(), ['block_view', 'config:block_list', 'config:views.view.test_view_block', 'http_response', 'rendered']));
+    $this->assertCacheTags(array_merge($block->getCacheTags(), ['block_view', 'config:block_list', 'config:views.view.test_view_block' , 'rendered']));
     $this->assertCacheContexts(['url.query_args:_wrapper_format']);
 
     // Add an empty text.
@@ -341,7 +339,7 @@ class DisplayBlockTest extends ViewTestBase {
 
     $this->drupalGet($url);
     $this->assertEqual(1, count($this->xpath('//div[contains(@class, "block-views-blocktest-view-block-block-1")]')));
-    $this->assertCacheTags(array_merge($block->getCacheTags(), ['block_view', 'config:block_list', 'config:views.view.test_view_block', 'http_response', 'rendered']));
+    $this->assertCacheTags(array_merge($block->getCacheTags(), ['block_view', 'config:block_list', 'config:views.view.test_view_block' , 'rendered']));
     $this->assertCacheContexts(['url.query_args:_wrapper_format']);
   }
 

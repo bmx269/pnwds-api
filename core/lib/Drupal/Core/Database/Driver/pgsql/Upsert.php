@@ -59,7 +59,7 @@ class Upsert extends QueryUpsert {
     }
     catch (\Exception $e) {
       // One of the queries failed, rollback the whole batch.
-      $transaction->rollBack();
+      $transaction->rollback();
 
       // Rethrow the exception for the calling code.
       throw $e;

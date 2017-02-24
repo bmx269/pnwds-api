@@ -4,7 +4,6 @@ namespace Drupal\Tests\Core\Menu;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Language\Language;
-use Drupal\Core\Menu\ContextualLinkDefault;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -385,7 +384,7 @@ class ContextualLinkManagerTest extends UnitTestCase {
   public function testPluginDefinitionAlter() {
     $definitions['test_plugin'] = array(
       'id' => 'test_plugin',
-      'class' => ContextualLinkDefault::class,
+      'class' => '\Drupal\Core\Menu\ContextualLinkDefault',
       'title' => 'Plugin',
       'weight' => 2,
       'group' => 'group1',

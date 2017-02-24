@@ -12,7 +12,6 @@ use Drupal\Core\Database\DatabaseExceptionWrapper;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Installer\Exception\AlreadyInstalledException;
 use Drupal\Core\Installer\Exception\InstallerException;
-use Drupal\Core\Installer\Exception\InstallProfileMismatchException;
 use Drupal\Core\Installer\Exception\NoProfilesException;
 use Drupal\Core\Installer\InstallerKernel;
 use Drupal\Core\Language\Language;
@@ -1559,7 +1558,7 @@ function install_profile_themes(&$install_state) {
 
   // Ensure that the install profile's theme is used.
   // @see _drupal_maintenance_theme()
-  \Drupal::theme()->resetActiveTheme();
+  \Drupal::service('theme.manager')->resetActiveTheme();
 }
 
 /**
@@ -1581,7 +1580,7 @@ function install_install_profile(&$install_state) {
 
   // Ensure that the install profile's theme is used.
   // @see _drupal_maintenance_theme()
-  \Drupal::theme()->resetActiveTheme();
+  \Drupal::service('theme.manager')->resetActiveTheme();
 }
 
 /**
@@ -2158,7 +2157,7 @@ function install_display_requirements($install_state, $requirements) {
   // and indicating a desire to continue anyway. See drupal_requirements_url().
   if ($severity == REQUIREMENT_ERROR || ($severity == REQUIREMENT_WARNING && empty($install_state['parameters']['continue']))) {
     if ($install_state['interactive']) {
-      $build['report']['#type'] = 'status_report';
+      $build['report']['#theme'] = 'status_report';
       $build['report']['#requirements'] = $requirements;
       if ($severity == REQUIREMENT_WARNING) {
         $build['#title'] = t('Requirements review');
@@ -2189,31 +2188,18 @@ function install_display_requirements($install_state, $requirements) {
 }
 
 /**
- * Installation task; writes profile to settings.php if possible.
+ * Installation task; ensures install profile is written to settings.php.
  *
  * @param array $install_state
  *   An array of information about the current installation state.
- *
- * @see _install_select_profile()
- *
- * @throws \Drupal\Core\Installer\Exception\InstallProfileMismatchException
- *
- * @deprecated in Drupal 8.3.0 and will be removed before Drupal 9.0.0. The
- *    install profile is written to core.extension.
  */
 function install_write_profile($install_state) {
-  // Only need to write to settings.php if it is possible. The primary storage
-  // for the install profile is the core.extension configuration.
-  $settings_path = \Drupal::service('site.path') . '/settings.php';
-  if (is_writable($settings_path)) {
+  if (Settings::get('install_profile') !== $install_state['parameters']['profile']) {
     // Remember the profile which was used.
     $settings['settings']['install_profile'] = (object) array(
       'value' => $install_state['parameters']['profile'],
       'required' => TRUE,
     );
     drupal_rewrite_settings($settings);
-  }
-  elseif (($settings_profile = Settings::get('install_profile')) && $settings_profile !== $install_state['parameters']['profile']) {
-    throw new InstallProfileMismatchException($install_state['parameters']['profile'], $settings_profile, $settings_path, \Drupal::translation());
   }
 }

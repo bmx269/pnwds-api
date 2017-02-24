@@ -144,7 +144,7 @@ class MatcherDumper implements MatcherDumperInterface {
 
     }
     catch (\Exception $e) {
-      $transaction->rollBack();
+      $transaction->rollback();
       watchdog_exception('Routing', $e);
       throw $e;
     }

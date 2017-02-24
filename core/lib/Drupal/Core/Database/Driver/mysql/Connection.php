@@ -2,7 +2,6 @@
 
 namespace Drupal\Core\Database\Driver\mysql;
 
-use Drupal\Core\Database\DatabaseAccessDeniedException;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
 
 use Drupal\Core\Database\Database;
@@ -26,11 +25,6 @@ class Connection extends DatabaseConnection {
    * Error code for "Unknown database" error.
    */
   const DATABASE_NOT_FOUND = 1049;
-
-  /**
-   * Error code for "Access denied" error.
-   */
-  const ACCESS_DENIED = 1045;
 
   /**
    * Error code for "Can't initialize character set" error.
@@ -145,18 +139,7 @@ class Connection extends DatabaseConnection {
       $connection_options['pdo'] += [\PDO::MYSQL_ATTR_MULTI_STATEMENTS => FALSE];
     }
 
-    try {
-      $pdo = new \PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
-    }
-    catch (\PDOException $e) {
-      if ($e->getCode() == static::DATABASE_NOT_FOUND) {
-        throw new DatabaseNotFoundException($e->getMessage(), $e->getCode(), $e);
-      }
-      if ($e->getCode() == static::ACCESS_DENIED) {
-        throw new DatabaseAccessDeniedException($e->getMessage(), $e->getCode(), $e);
-      }
-      throw $e;
-    }
+    $pdo = new \PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
 
     // Force MySQL to use the UTF-8 character set. Also set the collation, if a
     // certain one has been set; otherwise, MySQL defaults to

@@ -113,7 +113,7 @@ class ConfigEntityMapper extends ConfigNamesMapper {
   /**
    * Gets the entity instance for this mapper.
    *
-   * @return \Drupal\Core\Config\Entity\ConfigEntityInterface
+   * @return \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
    *   The configuration entity.
    */
   public function getEntity() {

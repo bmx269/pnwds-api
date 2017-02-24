@@ -263,7 +263,7 @@ abstract class CachePluginBase extends PluginBase {
    * @param \Drupal\views\ResultRow[] $result
    *   The result containing loaded entities.
    *
-   * @return \Drupal\views\ResultRow[]
+   * @return \Drupal\views\ResultRow[] $result
    *   The result without loaded entities.
    */
   protected function prepareViewResult(array $result) {

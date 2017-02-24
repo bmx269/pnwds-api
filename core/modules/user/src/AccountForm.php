@@ -2,12 +2,11 @@
 
 namespace Drupal\user;
 
-use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -29,20 +28,26 @@ abstract class AccountForm extends ContentEntityForm {
   protected $languageManager;
 
   /**
+   * The entity query factory service.
+   *
+   * @var \Drupal\Core\Entity\Query\QueryFactory
+   */
+  protected $entityQuery;
+
+  /**
    * Constructs a new EntityForm object.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle service.
-   * @param \Drupal\Component\Datetime\TimeInterface $time
-   *   The time service.
+   * @param \Drupal\Core\Entity\Query\QueryFactory $entity_query
+   *   The entity query factory.
    */
-  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL) {
-    parent::__construct($entity_manager, $entity_type_bundle_info, $time);
+  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query) {
+    parent::__construct($entity_manager);
     $this->languageManager = $language_manager;
+    $this->entityQuery = $entity_query;
   }
 
   /**
@@ -52,8 +57,7 @@ abstract class AccountForm extends ContentEntityForm {
     return new static(
       $container->get('entity.manager'),
       $container->get('language_manager'),
-      $container->get('entity_type.bundle.info'),
-      $container->get('datetime.time')
+      $container->get('entity.query')
     );
   }
 
@@ -102,7 +106,7 @@ abstract class AccountForm extends ContentEntityForm {
         'autocapitalize' => 'off',
         'spellcheck' => 'false',
       ),
-      '#default_value' => (!$register ? $account->getAccountName() : ''),
+      '#default_value' => (!$register ? $account->getUsername() : ''),
       '#access' => ($register || ($user->id() == $account->id() && $user->hasPermission('change own username')) || $admin),
     );
 
@@ -261,7 +265,7 @@ abstract class AccountForm extends ContentEntityForm {
     // language. This entity builder provides that synchronization. For
     // use-cases where this synchronization is not desired, a module can alter
     // or remove this item.
-    $form['#entity_builders']['sync_user_langcode'] = '::syncUserLangcode';
+    $form['#entity_builders']['sync_user_langcode'] = [$this, 'syncUserLangcode'];
 
     return parent::form($form, $form_state, $account);
   }

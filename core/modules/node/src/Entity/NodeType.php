@@ -205,11 +205,4 @@ class NodeType extends ConfigEntityBundleBase implements NodeTypeInterface {
     $storage->resetCache(array_keys($entities));
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function shouldCreateNewRevision() {
-    return $this->isNewRevision();
-  }
-
 }

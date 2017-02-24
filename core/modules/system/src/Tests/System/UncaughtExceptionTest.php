@@ -228,7 +228,7 @@ class UncaughtExceptionTest extends WebTestBase {
       'value' => $incorrect_username,
       'required' => TRUE,
     );
-    $settings['databases']['default']['default']['password'] = (object) array(
+    $settings['databases']['default']['default']['passowrd'] = (object) array(
       'value' => $this->randomMachineName(16),
       'required' => TRUE,
     );
@@ -237,7 +237,7 @@ class UncaughtExceptionTest extends WebTestBase {
 
     $this->drupalGet('');
     $this->assertResponse(500);
-    $this->assertRaw('DatabaseAccessDeniedException');
+    $this->assertRaw('PDOException');
     $this->assertErrorLogged($this->expectedExceptionMessage);
   }
 

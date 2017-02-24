@@ -1221,7 +1221,7 @@ abstract class WizardPluginBase extends PluginBase implements WizardInterface {
    * @param bool $unset
    *   Should the view be removed from the list of validated views.
    *
-   * @return \Drupal\views_ui\ViewUI
+   * @return \Drupal\views_ui\ViewUI $view
    *   The validated view object.
    */
   protected function retrieveValidatedView(array $form, FormStateInterface $form_state, $unset = TRUE) {

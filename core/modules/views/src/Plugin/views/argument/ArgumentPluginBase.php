@@ -105,7 +105,7 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
   /**
    * Determine if the argument needs a style plugin.
    *
-   * @return bool
+   * @return TRUE/FALSE
    */
   public function needsStylePlugin() {
     $info = $this->defaultActions($this->options['default_action']);
@@ -1324,17 +1324,6 @@ abstract class ArgumentPluginBase extends HandlerBase implements CacheableDepend
     }
 
     return $dependencies;
-  }
-
-  /**
-   * Returns a context definition for this argument.
-   *
-   * @return \Drupal\Core\Plugin\Context\ContextDefinitionInterface|null
-   *   A context definition that represents the argument or NULL if that is
-   *   not possible.
-   */
-  public function getContextDefinition() {
-    return $this->getPlugin('argument_validator')->getContextDefinition();
   }
 
 }

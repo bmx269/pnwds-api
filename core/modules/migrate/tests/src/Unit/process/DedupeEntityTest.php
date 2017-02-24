@@ -2,8 +2,6 @@
 
 namespace Drupal\Tests\migrate\Unit\process;
 
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\migrate\Plugin\migrate\process\DedupeEntity;
 use Drupal\Component\Utility\Unicode;
@@ -23,11 +21,11 @@ class DedupeEntityTest extends MigrateProcessTestCase {
   protected $entityQuery;
 
   /**
-   * The mocked entity type manager.
+   * The mock entity query factory.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Entity\Query\QueryFactory|\PHPUnit_Framework_MockObject_MockObject
    */
-  protected $entityTypeManager;
+  protected $entityQueryFactory;
 
   /**
    * The migration configuration, initialized to set the ID to test.
@@ -45,16 +43,12 @@ class DedupeEntityTest extends MigrateProcessTestCase {
     $this->entityQuery = $this->getMockBuilder('Drupal\Core\Entity\Query\QueryInterface')
       ->disableOriginalConstructor()
       ->getMock();
-    $this->entityTypeManager = $this->getMock(EntityTypeManagerInterface::class);
-
-    $storage = $this->getMock(EntityStorageInterface::class);
-    $storage->expects($this->any())
-      ->method('getQuery')
-      ->willReturn($this->entityQuery);
-    $this->entityTypeManager->expects($this->any())
-      ->method('getStorage')
-      ->with('test_entity_type')
-      ->willReturn($storage);
+    $this->entityQueryFactory = $this->getMockBuilder('Drupal\Core\Entity\Query\QueryFactory')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->entityQueryFactory->expects($this->any())
+      ->method('get')
+      ->will($this->returnValue($this->entityQuery));
     parent::setUp();
   }
 
@@ -73,7 +67,7 @@ class DedupeEntityTest extends MigrateProcessTestCase {
     }
     $configuration['start'] = isset($start) ? $start : NULL;
     $configuration['length'] = isset($length) ? $length : NULL;
-    $plugin = new DedupeEntity($configuration, 'dedupe_entity', array(), $this->getMigration(), $this->entityTypeManager);
+    $plugin = new DedupeEntity($configuration, 'dedupe_entity', array(), $this->getMigration(), $this->entityQueryFactory);
     $this->entityQueryExpects($count);
     $value = $this->randomMachineName(32);
     $actual = $plugin->transform($value, $this->migrateExecutable, $this->row, 'testproperty');
@@ -91,7 +85,7 @@ class DedupeEntityTest extends MigrateProcessTestCase {
       'field' => 'test_field',
       'start' => 'foobar',
     );
-    $plugin = new DedupeEntity($configuration, 'dedupe_entity', array(), $this->getMigration(), $this->entityTypeManager);
+    $plugin = new DedupeEntity($configuration, 'dedupe_entity', array(), $this->getMigration(), $this->entityQueryFactory);
     $this->setExpectedException('Drupal\migrate\MigrateException', 'The start position configuration key should be an integer. Omit this key to capture from the beginning of the string.');
     $plugin->transform('test_start', $this->migrateExecutable, $this->row, 'testproperty');
   }
@@ -105,7 +99,7 @@ class DedupeEntityTest extends MigrateProcessTestCase {
       'field' => 'test_field',
       'length' => 'foobar',
     );
-    $plugin = new DedupeEntity($configuration, 'dedupe_entity', array(), $this->getMigration(), $this->entityTypeManager);
+    $plugin = new DedupeEntity($configuration, 'dedupe_entity', array(), $this->getMigration(), $this->entityQueryFactory);
     $this->setExpectedException('Drupal\migrate\MigrateException', 'The character length configuration key should be an integer. Omit this key to capture the entire string.');
     $plugin->transform('test_length', $this->migrateExecutable, $this->row, 'testproperty');
   }
@@ -177,7 +171,7 @@ class DedupeEntityTest extends MigrateProcessTestCase {
       'field' => 'test_field',
       'migrated' => TRUE,
     );
-    $plugin = new DedupeEntity($configuration, 'dedupe_entity', array(), $this->getMigration(), $this->entityTypeManager);
+    $plugin = new DedupeEntity($configuration, 'dedupe_entity', array(), $this->getMigration(), $this->entityQueryFactory);
 
     // Setup the entityQuery used in DedupeEntity::exists. The map, $map, is
     // an array consisting of the four input parameters to the query condition

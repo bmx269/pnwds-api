@@ -36,17 +36,9 @@ class FileFieldDisplayTest extends FileFieldTestBase {
     // case.
     $file_formatters = array('file_table', 'file_url_plain', 'hidden', 'file_default');
     foreach ($file_formatters as $formatter) {
-      if ($formatter === 'hidden') {
-        $edit = [
-          "fields[$field_name][region]" => 'hidden',
-        ];
-      }
-      else {
-        $edit = [
-          "fields[$field_name][type]" => $formatter,
-          "fields[$field_name][region]" => 'content',
-        ];
-      }
+      $edit = array(
+        "fields[$field_name][type]" => $formatter,
+      );
       $this->drupalPostForm("admin/structure/types/manage/$type_name/display", $edit, t('Save'));
       $this->drupalGet('node/' . $node->id());
       $this->assertNoText($field_name, format_string('Field label is hidden when no file attached for formatter %formatter', array('%formatter' => $formatter)));

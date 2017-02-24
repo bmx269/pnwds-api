@@ -7,7 +7,6 @@
 
 namespace Drupal\Tests\Component\DependencyInjection\Dumper {
 
-  use Drupal\Component\Utility\Crypt;
   use Symfony\Component\DependencyInjection\Definition;
   use Symfony\Component\DependencyInjection\Reference;
   use Symfony\Component\DependencyInjection\Parameter;
@@ -626,7 +625,7 @@ namespace Drupal\Tests\Component\DependencyInjection\Dumper {
      */
     protected function getPrivateServiceCall($id, $service_definition, $shared = FALSE) {
       if (!$id) {
-        $hash = Crypt::hashBase64(serialize($service_definition));
+        $hash = sha1(serialize($service_definition));
         $id = 'private__' . $hash;
       }
       return (object) array(

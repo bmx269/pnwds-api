@@ -14,7 +14,7 @@ class ConfigEntityUnitTest extends KernelTestBase {
   /**
    * Exempt from strict schema checking.
    *
-   * @see \Drupal\Core\Config\Development\ConfigSchemaChecker
+   * @see \Drupal\Core\Config\Testing\ConfigSchemaChecker
    *
    * @var bool
    */

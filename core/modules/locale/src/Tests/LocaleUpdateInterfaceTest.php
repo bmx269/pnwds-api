@@ -49,7 +49,7 @@ class LocaleUpdateInterfaceTest extends LocaleUpdateBase {
     // Override Drupal core translation status as 'up-to-date'.
     $status = locale_translation_get_status();
     $status['drupal']['de']->type = 'current';
-    \Drupal::keyValue('locale.translation_status')->set('drupal', $status['drupal']);
+    \Drupal::state()->set('locale.translation_status', $status);
 
     // One language added, all translations up to date.
     $this->drupalGet('admin/reports/status');
@@ -61,7 +61,7 @@ class LocaleUpdateInterfaceTest extends LocaleUpdateBase {
     // Set locale_test_translate module to have a local translation available.
     $status = locale_translation_get_status();
     $status['locale_test_translate']['de']->type = 'local';
-    \Drupal::keyValue('locale.translation_status')->set('locale_test_translate', $status['locale_test_translate']);
+    \Drupal::state()->set('locale.translation_status', $status);
 
     // Check if updates are available for German.
     $this->drupalGet('admin/reports/status');
@@ -75,7 +75,7 @@ class LocaleUpdateInterfaceTest extends LocaleUpdateBase {
     $status = locale_translation_get_status();
     $status['locale_test_translate']['de']->version = '1.3-dev';
     $status['locale_test_translate']['de']->type = '';
-    \Drupal::keyValue('locale.translation_status')->set('locale_test_translate', $status['locale_test_translate']);
+    \Drupal::state()->set('locale.translation_status', $status);
 
     // Check if no updates were found.
     $this->drupalGet('admin/reports/status');
@@ -95,7 +95,7 @@ class LocaleUpdateInterfaceTest extends LocaleUpdateBase {
     $status['drupal']['de']->type = '';
     $status['drupal']['de']->timestamp = 0;
     $status['drupal']['de']->version = '8.1.1';
-    \Drupal::keyValue('locale.translation_status')->set('drupal', $status['drupal']);
+    \Drupal::state()->set('locale.translation_status', $status);
 
     // Check if Drupal core is not translated.
     $this->drupalGet('admin/reports/translations');
@@ -107,7 +107,7 @@ class LocaleUpdateInterfaceTest extends LocaleUpdateBase {
     $status['drupal']['de']->type = 'local';
     $status['drupal']['de']->files['local']->timestamp = REQUEST_TIME;
     $status['drupal']['de']->files['local']->info['version'] = '8.1.1';
-    \Drupal::keyValue('locale.translation_status')->set('drupal', $status['drupal']);
+    \Drupal::state()->set('locale.translation_status', $status);
 
     // Check if translations are available for Drupal core.
     $this->drupalGet('admin/reports/translations');

@@ -6,7 +6,6 @@ use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\simpletest\WebTestBase;
 use Drupal\system\Tests\Cache\AssertPageCacheContextsAndTagsTrait;
-use Drupal\node\NodeInterface;
 
 /**
  * Enables the page cache and tests its cache tags in various scenarios.
@@ -45,7 +44,7 @@ class PageCacheTagsIntegrationTest extends WebTestBase {
       'body' => array(
         0 => array('value' => 'Body 1', 'format' => 'basic_html'),
       ),
-      'promote' => NodeInterface::PROMOTED,
+      'promote' => NODE_PROMOTED,
     ));
     $author_2 = $this->drupalCreateUser();
     $node_2 = $this->drupalCreateNode(array(
@@ -54,7 +53,7 @@ class PageCacheTagsIntegrationTest extends WebTestBase {
       'body' => array(
         0 => array('value' => 'Body 2', 'format' => 'full_html'),
       ),
-      'promote' => NodeInterface::PROMOTED,
+      'promote' => NODE_PROMOTED,
     ));
 
     // Place a block, but only make it visible on full node page 2.
@@ -80,7 +79,6 @@ class PageCacheTagsIntegrationTest extends WebTestBase {
 
     // Full node page 1.
     $this->assertPageCacheContextsAndTags($node_1->urlInfo(), $cache_contexts, array(
-      'http_response',
       'rendered',
       'block_view',
       'config:block_list',
@@ -121,7 +119,6 @@ class PageCacheTagsIntegrationTest extends WebTestBase {
 
     // Full node page 2.
     $this->assertPageCacheContextsAndTags($node_2->urlInfo(), $cache_contexts, array(
-      'http_response',
       'rendered',
       'block_view',
       'config:block_list',

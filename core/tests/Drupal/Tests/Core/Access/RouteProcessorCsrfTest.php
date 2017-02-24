@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\Core\Access;
 
-use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Access\RouteProcessorCsrf;
@@ -69,7 +68,7 @@ class RouteProcessorCsrfTest extends UnitTestCase {
     // Bubbleable metadata of routes with a _csrf_token route requirement is a
     // placeholder.
     $path = 'test-path';
-    $placeholder = Crypt::hashBase64($path);
+    $placeholder = hash('sha1', $path);
     $placeholder_render_array = [
       '#lazy_builder' => ['route_processor_csrf:renderPlaceholderCsrfToken', [$path]],
     ];
@@ -89,7 +88,7 @@ class RouteProcessorCsrfTest extends UnitTestCase {
     // Bubbleable metadata of routes with a _csrf_token route requirement is a
     // placeholder.
     $path = 'test-path/100';
-    $placeholder = Crypt::hashBase64($path);
+    $placeholder = hash('sha1', $path);
     $placeholder_render_array = [
       '#lazy_builder' => ['route_processor_csrf:renderPlaceholderCsrfToken', [$path]],
     ];
@@ -108,7 +107,7 @@ class RouteProcessorCsrfTest extends UnitTestCase {
     // Bubbleable metadata of routes with a _csrf_token route requirement is a
     // placeholder.
     $path = '100/test-path/test';
-    $placeholder = Crypt::hashBase64($path);
+    $placeholder = hash('sha1', $path);
     $placeholder_render_array = [
       '#lazy_builder' => ['route_processor_csrf:renderPlaceholderCsrfToken', [$path]],
     ];

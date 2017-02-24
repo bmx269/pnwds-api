@@ -2,6 +2,8 @@
 
 namespace Drupal\FunctionalTests\Entity;
 
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\ContentEntityStorageInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -12,7 +14,7 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @group Entity
  */
-class ContentEntityFormCorrectUserInputMappingOnFieldDeltaElementsTest extends BrowserTestBase {
+class ContentEntityFormCorrectUserInputMappingOnFieldDeltaElementsTest extends BrowserTestBase  {
 
   /**
    * The ID of the type of the entity under test.

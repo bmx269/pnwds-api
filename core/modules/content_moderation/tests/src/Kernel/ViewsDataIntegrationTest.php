@@ -6,7 +6,6 @@ use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
-use Drupal\workflows\Entity\Workflow;
 
 /**
  * Tests the views integration of content_moderation.
@@ -22,7 +21,6 @@ class ViewsDataIntegrationTest extends ViewsKernelTestBase {
     'content_moderation_test_views',
     'node',
     'content_moderation',
-    'workflows',
   ];
 
   /**
@@ -41,10 +39,8 @@ class ViewsDataIntegrationTest extends ViewsKernelTestBase {
     $node_type = NodeType::create([
       'type' => 'page',
     ]);
+    $node_type->setThirdPartySetting('content_moderation', 'enabled', TRUE);
     $node_type->save();
-    $workflow = Workflow::load('editorial');
-    $workflow->getTypePlugin()->addEntityTypeAndBundle('node', 'page');
-    $workflow->save();
   }
 
   /**
@@ -57,14 +53,14 @@ class ViewsDataIntegrationTest extends ViewsKernelTestBase {
       'type' => 'page',
       'title' => 'Test title first revision',
     ]);
-    $node->moderation_state->value = 'published';
+    $node->moderation_state->target_id = 'published';
     $node->save();
 
     $revision = clone $node;
     $revision->setNewRevision(TRUE);
     $revision->isDefaultRevision(FALSE);
     $revision->title->value = 'Test title second revision';
-    $revision->moderation_state->value = 'draft';
+    $revision->moderation_state->target_id = 'draft';
     $revision->save();
 
     $view = Views::getView('test_content_moderation_latest_revision');
@@ -94,14 +90,14 @@ class ViewsDataIntegrationTest extends ViewsKernelTestBase {
       'type' => 'page',
       'title' => 'Test title first revision',
     ]);
-    $node->moderation_state->value = 'published';
+    $node->moderation_state->target_id = 'published';
     $node->save();
 
     $revision = clone $node;
     $revision->setNewRevision(TRUE);
     $revision->isDefaultRevision(FALSE);
     $revision->title->value = 'Test title second revision';
-    $revision->moderation_state->value = 'draft';
+    $revision->moderation_state->target_id = 'draft';
     $revision->save();
 
     $view = Views::getView('test_content_moderation_revision_test');
@@ -128,14 +124,14 @@ class ViewsDataIntegrationTest extends ViewsKernelTestBase {
       'type' => 'page',
       'title' => 'Test title first revision',
     ]);
-    $node->moderation_state->value = 'published';
+    $node->moderation_state->target_id = 'published';
     $node->save();
 
     $revision = clone $node;
     $revision->setNewRevision(TRUE);
     $revision->isDefaultRevision(FALSE);
     $revision->title->value = 'Test title second revision';
-    $revision->moderation_state->value = 'draft';
+    $revision->moderation_state->target_id = 'draft';
     $revision->save();
 
     $view = Views::getView('test_content_moderation_base_table_test');

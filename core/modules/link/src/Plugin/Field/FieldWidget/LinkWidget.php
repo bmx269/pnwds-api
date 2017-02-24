@@ -193,10 +193,9 @@ class LinkWidget extends WidgetBase {
     }
 
     // If the field is configured to allow only internal links, add a useful
-    // element prefix and description.
+    // element prefix.
     if (!$this->supportsExternalLinks()) {
       $element['uri']['#field_prefix'] = rtrim(\Drupal::url('<front>', array(), array('absolute' => TRUE)), '/');
-      $element['uri']['#description'] = $this->t('This must be an internal path such as %add-node. You can also start typing the title of a piece of content to select it. Enter %front to link to the front page.', array('%add-node' => '/node/add', '%front' => '<front>'));
     }
     // If the field is configured to allow both internal and external links,
     // show a useful description.

@@ -18,8 +18,6 @@ class CryptTest extends UnitTestCase {
    * Tests random byte generation.
    *
    * @covers ::randomBytes
-   *
-   * @see \Drupal\Tests\Component\Utility\CryptRandomFallbackTest::testRandomBytesFallback
    */
   public function testRandomBytes() {
     for ($i = 1; $i < 10; $i++) {

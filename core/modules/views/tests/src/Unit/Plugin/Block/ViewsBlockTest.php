@@ -6,6 +6,11 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Plugin\Block\ViewsBlock;
 
+// @todo Remove this once the constant got converted.
+if (!defined('BLOCK_LABEL_VISIBLE')) {
+  define('BLOCK_LABEL_VISIBLE', 'visible');
+}
+
 /**
  * @coversDefaultClass \Drupal\views\Plugin\block\ViewsBlock
  * @group views
@@ -111,11 +116,6 @@ class ViewsBlockTest extends UnitTestCase {
     $this->displayHandler->expects($this->any())
       ->method('getPluginId')
       ->willReturn('block');
-
-    $this->displayHandler->expects($this->any())
-      ->method('getHandlers')
-      ->willReturn([]);
-
     $this->executable->display_handler = $this->displayHandler;
 
     $this->storage = $this->getMockBuilder('Drupal\Core\Config\Entity\ConfigEntityStorage')

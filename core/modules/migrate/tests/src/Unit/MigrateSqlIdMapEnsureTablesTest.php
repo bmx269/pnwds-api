@@ -34,10 +34,6 @@ class MigrateSqlIdMapEnsureTablesTest extends MigrateTestCase {
       'type' => 'int',
       'not null' => TRUE,
     );
-    $fields['sourceid2'] = array(
-      'type' => 'int',
-      'not null' => TRUE,
-    );
     $fields['destid1'] = array(
       'type' => 'varchar',
       'length' => 255,
@@ -76,9 +72,6 @@ class MigrateSqlIdMapEnsureTablesTest extends MigrateTestCase {
       'description' => 'Mappings from source identifier value(s) to destination identifier value(s).',
       'fields' => $fields,
       'primary key' => array('source_ids_hash'),
-      'indexes' => [
-        'source' => ['sourceid1', 'sourceid2'],
-      ],
     );
     $schema = $this->getMockBuilder('Drupal\Core\Database\Schema')
       ->disableOriginalConstructor()
@@ -210,9 +203,6 @@ class MigrateSqlIdMapEnsureTablesTest extends MigrateTestCase {
       ->method('getIds')
       ->willReturn(array(
       'source_id_property' => array(
-        'type' => 'integer',
-      ),
-      'source_id_property_2' => array(
         'type' => 'integer',
       ),
     ));

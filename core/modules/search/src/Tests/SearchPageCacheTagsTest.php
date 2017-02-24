@@ -70,7 +70,6 @@ class SearchPageCacheTagsTest extends SearchTestBase {
     $this->assertCacheTag('node:1');
     $this->assertCacheTag('user:2');
     $this->assertCacheTag('rendered');
-    $this->assertCacheTag('http_response');
     $this->assertCacheTag('node_list');
 
     // Updating a node should invalidate the search plugin's index cache tag.
@@ -84,7 +83,6 @@ class SearchPageCacheTagsTest extends SearchTestBase {
     $this->assertCacheTag('node:1');
     $this->assertCacheTag('user:2');
     $this->assertCacheTag('rendered');
-    $this->assertCacheTag('http_response');
     $this->assertCacheTag('node_list');
 
     // Deleting a node should invalidate the search plugin's index cache tag.
@@ -174,7 +172,6 @@ class SearchPageCacheTagsTest extends SearchTestBase {
       'config:search.page.node_search',
       'search_index',
       'search_index:node_search',
-      'http_response',
       'rendered',
       'node_list',
     ];
@@ -195,7 +192,8 @@ class SearchPageCacheTagsTest extends SearchTestBase {
       'node_view',
       'config:filter.format.plain_text',
     ]);
-    $this->assertCacheTags($expected_cache_tags);
+    $cache_tags = $this->drupalGetHeader('X-Drupal-Cache-Tags');
+    $this->assertEqual(explode(' ', $cache_tags), $expected_cache_tags);
 
     // Only get the new node in the search results, should result in node:1,
     // node:2 and user:3 as cache tags even though only node:1 is shown. This is
@@ -210,7 +208,8 @@ class SearchPageCacheTagsTest extends SearchTestBase {
       'user:3',
       'node_view',
     ]);
-    $this->assertCacheTags($expected_cache_tags);
+    $cache_tags = $this->drupalGetHeader('X-Drupal-Cache-Tags');
+    $this->assertEqual(explode(' ', $cache_tags), $expected_cache_tags);
   }
 
 }

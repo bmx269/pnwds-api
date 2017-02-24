@@ -6,12 +6,27 @@ use Symfony\Component\Routing\Exception\InvalidParameterException;
 use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Validator\Constraint;
-use Symfony\Component\Validator\ConstraintValidator;
+use Symfony\Component\Validator\ConstraintValidatorInterface;
+use Symfony\Component\Validator\ExecutionContextInterface;
 
 /**
  * Validates the LinkNotExistingInternal constraint.
  */
-class LinkNotExistingInternalConstraintValidator extends ConstraintValidator {
+class LinkNotExistingInternalConstraintValidator implements ConstraintValidatorInterface {
+
+  /**
+   * Stores the validator's state during validation.
+   *
+   * @var \Symfony\Component\Validator\ExecutionContextInterface
+   */
+  protected $context;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function initialize(ExecutionContextInterface $context) {
+    $this->context = $context;
+  }
 
   /**
    * {@inheritdoc}

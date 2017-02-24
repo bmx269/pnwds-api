@@ -9,9 +9,6 @@ use Drupal\aggregator\FeedInterface;
 
 /**
  * Defines a base class for testing the Aggregator module.
- *
- * @deprecated Scheduled for removal in Drupal 9.0.0.
- *   Use \Drupal\Tests\aggregator\Functional\AggregatorTestBase instead.
  */
 abstract class AggregatorTestBase extends WebTestBase {
 
@@ -274,8 +271,7 @@ abstract class AggregatorTestBase extends WebTestBase {
 EOF;
 
     $path = 'public://valid-opml.xml';
-    // Add the UTF-8 byte order mark.
-    return file_unmanaged_save_data(chr(239) . chr(187) . chr(191) . $opml, $path);
+    return file_unmanaged_save_data($opml, $path);
   }
 
   /**

@@ -335,7 +335,6 @@ class OptionsFieldUITest extends FieldTestBase {
     foreach ($file_formatters as $formatter) {
       $edit = array(
         "fields[$this->fieldName][type]" => $formatter,
-        "fields[$this->fieldName][region]" => 'content',
       );
       $this->drupalPostForm('admin/structure/types/manage/' . $this->typeName . '/display', $edit, t('Save'));
       $this->drupalGet('node/' . $node->id());

@@ -3,7 +3,6 @@
 namespace Drupal\views\Tests;
 
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests search integration filters with multilingual nodes.
@@ -61,7 +60,7 @@ class SearchMultilingualTest extends ViewTestBase {
     $node = $this->drupalCreateNode($values);
 
     // "Translate" this node into Spanish, with title "pizza".
-    $node->addTranslation('es', ['title' => 'pizza', 'status' => NodeInterface::PUBLISHED]);
+    $node->addTranslation('es', array('title' => 'pizza', 'status' => NODE_PUBLISHED));
     $node->save();
 
     // Run cron so that the search index tables are updated.

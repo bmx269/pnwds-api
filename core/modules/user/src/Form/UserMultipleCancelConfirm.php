@@ -96,7 +96,6 @@ class UserMultipleCancelConfirm extends ConfirmFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Retrieve the accounts to be canceled from the temp store.
-    /* @var \Drupal\user\Entity\User[] $accounts */
     $accounts = $this->tempStoreFactory
       ->get('user_user_operations_cancel')
       ->get($this->currentUser()->id());
@@ -105,26 +104,21 @@ class UserMultipleCancelConfirm extends ConfirmFormBase {
     }
 
     $root = NULL;
-    $names = [];
-    $form['accounts'] = ['#tree' => TRUE];
+    $form['accounts'] = array('#prefix' => '<ul>', '#suffix' => '</ul>', '#tree' => TRUE);
     foreach ($accounts as $account) {
       $uid = $account->id();
-      $names[$uid] = $account->label();
       // Prevent user 1 from being canceled.
       if ($uid <= 1) {
         $root = intval($uid) === 1 ? $account : $root;
         continue;
       }
-      $form['accounts'][$uid] = [
+      $form['accounts'][$uid] = array(
         '#type' => 'hidden',
         '#value' => $uid,
-      ];
+        '#prefix' => '<li>',
+        '#suffix' => $account->label() . "</li>\n",
+      );
     }
-
-    $form['account']['names'] = [
-      '#theme' => 'item_list',
-      '#items' => $names,
-    ];
 
     // Output a notice that user 1 cannot be canceled.
     if (isset($root)) {

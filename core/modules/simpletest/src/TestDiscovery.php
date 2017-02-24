@@ -81,7 +81,7 @@ class TestDiscovery {
   }
 
   /**
-   * Registers test namespaces of all extensions and core test classes.
+   * Registers test namespaces of all available extensions.
    *
    * @return array
    *   An associative array whose keys are PSR-4 namespace prefixes and whose
@@ -119,10 +119,6 @@ class TestDiscovery {
       $this->testNamespaces["Drupal\\Tests\\$name\\Kernel\\"][] = "$base_path/tests/src/Kernel";
       $this->testNamespaces["Drupal\\Tests\\$name\\Functional\\"][] = "$base_path/tests/src/Functional";
       $this->testNamespaces["Drupal\\Tests\\$name\\FunctionalJavascript\\"][] = "$base_path/tests/src/FunctionalJavascript";
-
-      // Add discovery for traits which are shared between different test
-      // suites.
-      $this->testNamespaces["Drupal\\Tests\\$name\\Traits\\"][] = "$base_path/tests/src/Traits";
     }
 
     foreach ($this->testNamespaces as $prefix => $paths) {

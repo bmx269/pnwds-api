@@ -3,13 +3,41 @@
 namespace Drupal\filter;
 
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\filter\Plugin\Filter\FilterNull;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a base form for a filter format.
  */
 abstract class FilterFormatFormBase extends EntityForm {
+
+  /**
+   * The entity query factory.
+   *
+   * @var \Drupal\Core\Entity\Query\QueryFactory
+   */
+  protected $queryFactory;
+
+  /**
+   * Constructs a new FilterFormatFormBase.
+   *
+   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
+   *   The entity query factory.
+   */
+  public function __construct(QueryFactory $query_factory) {
+    $this->queryFactory = $query_factory;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('entity.query')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -161,9 +189,8 @@ abstract class FilterFormatFormBase extends EntityForm {
    *   TRUE if the format exists, FALSE otherwise.
    */
   public function exists($format_id) {
-    return (bool) $this->entityTypeManager
-      ->getStorage('filter_format')
-      ->getQuery()
+    return (bool) $this->queryFactory
+      ->get('filter_format')
       ->condition('format', $format_id)
       ->execute();
   }
@@ -182,9 +209,8 @@ abstract class FilterFormatFormBase extends EntityForm {
     $form_state->setValueForElement($form['format'], $format_format);
     $form_state->setValueForElement($form['name'], $format_name);
 
-    $format_exists = $this->entityTypeManager
-      ->getStorage('filter_format')
-      ->getQuery()
+    $format_exists = $this->queryFactory
+      ->get('filter_format')
       ->condition('format', $format_format, '<>')
       ->condition('name', $format_name)
       ->execute();

@@ -45,7 +45,7 @@ class RouterTest extends WebTestBase {
     // Check expected headers from FinishResponseSubscriber.
     $headers = $this->drupalGetHeaders();
     $this->assertEqual($headers['x-drupal-cache-contexts'], implode(' ', $expected_cache_contexts));
-    $this->assertEqual($headers['x-drupal-cache-tags'], 'config:user.role.anonymous http_response rendered');
+    $this->assertEqual($headers['x-drupal-cache-tags'], 'config:user.role.anonymous rendered');
     // Confirm that the page wrapping is being added, so we're not getting a
     // raw body returned.
     $this->assertRaw('</html>', 'Page markup was found.');
@@ -60,12 +60,12 @@ class RouterTest extends WebTestBase {
     $this->drupalGet('router_test/test18');
     $headers = $this->drupalGetHeaders();
     $this->assertEqual($headers['x-drupal-cache-contexts'], implode(' ', Cache::mergeContexts($renderer_required_cache_contexts, ['url'])));
-    $this->assertEqual($headers['x-drupal-cache-tags'], 'config:user.role.anonymous foo http_response rendered');
+    $this->assertEqual($headers['x-drupal-cache-tags'], 'config:user.role.anonymous foo rendered');
     // 2. controller result: render array, per-role cacheable route access.
     $this->drupalGet('router_test/test19');
     $headers = $this->drupalGetHeaders();
     $this->assertEqual($headers['x-drupal-cache-contexts'], implode(' ', Cache::mergeContexts($renderer_required_cache_contexts, ['url', 'user.roles'])));
-    $this->assertEqual($headers['x-drupal-cache-tags'], 'config:user.role.anonymous foo http_response rendered');
+    $this->assertEqual($headers['x-drupal-cache-tags'], 'config:user.role.anonymous foo rendered');
     // 3. controller result: Response object, globally cacheable route access.
     $this->drupalGet('router_test/test1');
     $headers = $this->drupalGetHeaders();
@@ -80,12 +80,12 @@ class RouterTest extends WebTestBase {
     $this->drupalGet('router_test/test21');
     $headers = $this->drupalGetHeaders();
     $this->assertEqual($headers['x-drupal-cache-contexts'], '');
-    $this->assertEqual($headers['x-drupal-cache-tags'], 'http_response');
+    $this->assertEqual($headers['x-drupal-cache-tags'], '');
     // 6. controller result: CacheableResponse object, per-role cacheable route access.
     $this->drupalGet('router_test/test22');
     $headers = $this->drupalGetHeaders();
     $this->assertEqual($headers['x-drupal-cache-contexts'], 'user.roles');
-    $this->assertEqual($headers['x-drupal-cache-tags'], 'http_response');
+    $this->assertEqual($headers['x-drupal-cache-tags'], '');
 
     // Finally, verify that the X-Drupal-Cache-Contexts and X-Drupal-Cache-Tags
     // headers are not sent when their container parameter is set to FALSE.

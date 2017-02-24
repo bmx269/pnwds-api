@@ -4,12 +4,27 @@ namespace Drupal\link\Plugin\Validation\Constraint;
 
 use Drupal\Component\Utility\UrlHelper;
 use Symfony\Component\Validator\Constraint;
-use Symfony\Component\Validator\ConstraintValidator;
+use Symfony\Component\Validator\ConstraintValidatorInterface;
+use Symfony\Component\Validator\ExecutionContextInterface;
 
 /**
  * Validates the LinkExternalProtocols constraint.
  */
-class LinkExternalProtocolsConstraintValidator extends ConstraintValidator {
+class LinkExternalProtocolsConstraintValidator implements ConstraintValidatorInterface {
+
+  /**
+   * Stores the validator's state during validation.
+   *
+   * @var \Symfony\Component\Validator\ExecutionContextInterface
+   */
+  protected $context;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function initialize(ExecutionContextInterface $context) {
+    $this->context = $context;
+  }
 
   /**
    * {@inheritdoc}

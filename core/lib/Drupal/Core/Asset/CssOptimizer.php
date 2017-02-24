@@ -205,10 +205,8 @@ class CssOptimizer implements AssetOptimizerInterface {
       // whitespace.
       // @see http://php.net/manual/regexp.reference.subpatterns.php
       $contents = preg_replace('<
-        # Do not strip any space from within single or double quotes
-          (' . $double_quot . '|' . $single_quot . ')
         # Strip leading and trailing whitespace.
-        | \s*([@{};,])\s*
+          \s*([@{};,])\s*
         # Strip only leading whitespace from:
         # - Closing parenthesis: Retain "@media (bar) and foo".
         | \s+([\)])
@@ -216,11 +214,11 @@ class CssOptimizer implements AssetOptimizerInterface {
         # - Opening parenthesis: Retain "@media (bar) and foo".
         # - Colon: Retain :pseudo-selectors.
         | ([\(:])\s+
-      >xSs',
-        // Only one of the four capturing groups will match, so its reference
+      >xS',
+        // Only one of the three capturing groups will match, so its reference
         // will contain the wanted value and the references for the
         // two non-matching groups will be replaced with empty strings.
-        '$1$2$3$4',
+        '$1$2$3',
         $contents
       );
       // End the file with a new line.

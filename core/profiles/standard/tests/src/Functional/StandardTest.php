@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\standard\Functional;
 
-use Drupal\Tests\SchemaCheckTestTrait;
+use Drupal\config\Tests\SchemaCheckTestTrait;
 use Drupal\contact\Entity\ContactForm;
 use Drupal\Core\Url;
 use Drupal\dynamic_page_cache\EventSubscriber\DynamicPageCacheSubscriber;

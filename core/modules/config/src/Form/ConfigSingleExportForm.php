@@ -2,7 +2,6 @@
 
 namespace Drupal\config\Form;
 
-use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -74,7 +73,7 @@ class ConfigSingleExportForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $config_type = NULL, $config_name = NULL) {
     foreach ($this->entityManager->getDefinitions() as $entity_type => $definition) {
-      if ($definition->entityClassImplements(ConfigEntityInterface::class)) {
+      if ($definition->isSubclassOf('Drupal\Core\Config\Entity\ConfigEntityInterface')) {
         $this->definitions[$entity_type] = $definition;
       }
     }

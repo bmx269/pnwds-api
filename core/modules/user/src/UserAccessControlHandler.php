@@ -3,7 +3,6 @@
 namespace Drupal\user;
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Access\AccessResultNeutral;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -56,9 +55,6 @@ class UserAccessControlHandler extends EntityAccessControlHandler {
         // Users can view own profiles at all times.
         elseif ($account->id() == $entity->id()) {
           return AccessResult::allowed()->cachePerUser();
-        }
-        else {
-          return AccessResultNeutral::neutral("The 'access user profiles' permission is required and the user must be active.");
         }
         break;
 

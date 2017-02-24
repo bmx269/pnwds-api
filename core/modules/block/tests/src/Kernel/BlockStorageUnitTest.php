@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\block\Kernel;
 
-use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\block_test\Plugin\Block\TestHtmlBlock;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\block\Entity\Block;
+use Drupal\block\BlockInterface;
 
 /**
  * Tests the storage of blocks.
@@ -34,8 +34,6 @@ class BlockStorageUnitTest extends KernelTestBase {
     parent::setUp();
 
     $this->controller = $this->container->get('entity_type.manager')->getStorage('block');
-
-    $this->container->get('theme_installer')->install(['stark']);
   }
 
   /**
@@ -68,7 +66,6 @@ class BlockStorageUnitTest extends KernelTestBase {
     $entity = $this->controller->create(array(
       'id' => 'test_block',
       'theme' => 'stark',
-      'region' => 'content',
       'plugin' => 'test_html',
     ));
     $entity->save();
@@ -87,7 +84,7 @@ class BlockStorageUnitTest extends KernelTestBase {
       'dependencies' => array('module' => array('block_test'), 'theme' => array('stark')),
       'id' => 'test_block',
       'theme' => 'stark',
-      'region' => 'content',
+      'region' => '-1',
       'weight' => NULL,
       'provider' => NULL,
       'plugin' => 'test_html',
@@ -95,7 +92,7 @@ class BlockStorageUnitTest extends KernelTestBase {
         'id' => 'test_html',
         'label' => '',
         'provider' => 'block_test',
-        'label_display' => BlockPluginInterface::BLOCK_LABEL_VISIBLE,
+        'label_display' => BlockInterface::BLOCK_LABEL_VISIBLE,
       ),
       'visibility' => array(),
     );
@@ -114,7 +111,7 @@ class BlockStorageUnitTest extends KernelTestBase {
     $this->assertTrue($entity instanceof Block, 'The loaded entity is a Block.');
 
     // Verify several properties of the block.
-    $this->assertSame('content', $entity->getRegion());
+    $this->assertEqual($entity->getRegion(), '-1');
     $this->assertTrue($entity->status());
     $this->assertEqual($entity->getTheme(), 'stark');
     $this->assertTrue($entity->uuid());

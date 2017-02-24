@@ -57,6 +57,13 @@ class ExtensionDiscovery {
   const PHP_FUNCTION_PATTERN = '/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/';
 
   /**
+   * InfoParser instance for parsing .info.yml files.
+   *
+   * @var \Drupal\Core\Extension\InfoParser
+   */
+  protected $infoParser;
+
+  /**
    * Previously discovered files keyed by origin directory and extension type.
    *
    * @var array
@@ -494,6 +501,19 @@ class ExtensionDiscovery {
       }
     }
     return $files;
+  }
+
+  /**
+   * Returns a parser for .info.yml files.
+   *
+   * @return \Drupal\Core\Extension\InfoParser
+   *   The InfoParser instance.
+   */
+  protected function getInfoParser() {
+    if (!isset($this->infoParser)) {
+      $this->infoParser = new InfoParser();
+    }
+    return $this->infoParser;
   }
 
 }

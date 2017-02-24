@@ -7,7 +7,6 @@ use Drupal\Component\FileCache\FileCache;
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
-use Drupal\Core\Config\Development\ConfigSchemaChecker;
 use Drupal\Core\Database\Database;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderInterface;
@@ -182,7 +181,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
   /**
    * Set to TRUE to strict check all configuration saved.
    *
-   * @see \Drupal\Core\Config\Development\ConfigSchemaChecker
+   * @see \Drupal\Core\Config\Testing\ConfigSchemaChecker
    *
    * @var bool
    */
@@ -392,7 +391,6 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
     $this->container->get('config.storage')->write('core.extension', array(
       'module' => array_fill_keys($modules, 0),
       'theme' => array(),
-      'profile' => '',
     ));
 
     $settings = Settings::getAll();
@@ -610,7 +608,7 @@ abstract class KernelTestBase extends \PHPUnit_Framework_TestCase implements Ser
 
     if ($this->strictConfigSchema) {
       $container
-        ->register('simpletest.config_schema_checker', ConfigSchemaChecker::class)
+        ->register('simpletest.config_schema_checker', 'Drupal\Core\Config\Testing\ConfigSchemaChecker')
         ->addArgument(new Reference('config.typed'))
         ->addArgument($this->getConfigSchemaExclusions())
         ->addTag('event_subscriber');

@@ -9,21 +9,10 @@ use Drupal\migrate\Row;
 use GuzzleHttp\Psr7\Uri;
 
 /**
- * URL-encodes the input value.
+ * Apply urlencoding to a URI.
  *
- * Example:
- *
- * @code
- * process:
- *   new_url:
- *     plugin: urlencode
- *     source: 'http://example.com/a url with spaces.html'
- * @endcode
- *
- * This will convert the source URL 'http://example.com/a url with spaces.html'
- * into 'http://example.com/a%20url%20with%20spaces.html'.
- *
- * @see \Drupal\migrate\Plugin\MigrateProcessInterface
+ * This is needed when the URI is to be opened by a later migration stage, and
+ * the source URI value is not already encoded.
  *
  * @MigrateProcessPlugin(
  *   id = "urlencode"

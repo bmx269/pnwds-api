@@ -15,7 +15,6 @@ use Drupal\entity_test\Entity\EntityTestStringId;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
-use Drupal\node\NodeInterface;
 use Drupal\Tests\field\Kernel\FieldKernelTestBase;
 use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
@@ -386,7 +385,7 @@ class EntityReferenceItemTest extends FieldKernelTestBase {
     $node = Node::create([
       'title' => $title,
       'type' => 'node',
-      'status' => NodeInterface::NOT_PUBLISHED,
+      'status' => NODE_NOT_PUBLISHED,
     ]);
 
     $entity = EntityTest::create([
@@ -410,14 +409,14 @@ class EntityReferenceItemTest extends FieldKernelTestBase {
     $unsaved_unpublished_node = Node::create([
       'title' => $unsaved_unpublished_node_title,
       'type' => 'node',
-      'status' => NodeInterface::NOT_PUBLISHED,
+      'status' => NODE_NOT_PUBLISHED,
     ]);
 
     $saved_unpublished_node_title = $this->randomString();
     $saved_unpublished_node = Node::create([
       'title' => $saved_unpublished_node_title,
       'type' => 'node',
-      'status' => NodeInterface::NOT_PUBLISHED,
+      'status' => NODE_NOT_PUBLISHED,
     ]);
     $saved_unpublished_node->save();
 
@@ -425,7 +424,7 @@ class EntityReferenceItemTest extends FieldKernelTestBase {
     $saved_published_node = Node::create([
       'title' => $saved_published_node_title,
       'type' => 'node',
-      'status' => NodeInterface::PUBLISHED,
+      'status' => NODE_PUBLISHED,
     ]);
     $saved_published_node->save();
 

@@ -75,9 +75,7 @@ class Details extends RenderElement {
 
     // Collapsible details.
     $element['#attached']['library'][] = 'core/drupal.collapse';
-
-    // Open the detail if specified or if a child has an error.
-    if (!empty($element['#open']) || !empty($element['#children_errors'])) {
+    if (!empty($element['#open'])) {
       $element['#attributes']['open'] = 'open';
     }
 

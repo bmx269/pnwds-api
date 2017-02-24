@@ -2,11 +2,9 @@
 
 namespace Drupal\contact;
 
-use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Flood\FloodInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -65,13 +63,9 @@ class MessageForm extends ContentEntityForm {
    *   The contact mail handler service.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The date service.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle service.
-   * @param \Drupal\Component\Datetime\TimeInterface $time
-   *   The time service.
    */
-  public function __construct(EntityManagerInterface $entity_manager, FloodInterface $flood, LanguageManagerInterface $language_manager, MailHandlerInterface $mail_handler, DateFormatterInterface $date_formatter, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL) {
-    parent::__construct($entity_manager, $entity_type_bundle_info, $time);
+  public function __construct(EntityManagerInterface $entity_manager, FloodInterface $flood, LanguageManagerInterface $language_manager, MailHandlerInterface $mail_handler, DateFormatterInterface $date_formatter) {
+    parent::__construct($entity_manager);
     $this->flood = $flood;
     $this->languageManager = $language_manager;
     $this->mailHandler = $mail_handler;
@@ -87,9 +81,7 @@ class MessageForm extends ContentEntityForm {
       $container->get('flood'),
       $container->get('language_manager'),
       $container->get('contact.mail_handler'),
-      $container->get('date.formatter'),
-      $container->get('entity_type.bundle.info'),
-      $container->get('datetime.time')
+      $container->get('date.formatter')
     );
   }
 
@@ -213,10 +205,6 @@ class MessageForm extends ContentEntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     $message = $this->entity;
     $user = $this->currentUser();
-    // Save the message. In core this is a no-op but should contrib wish to
-    // implement message storage, this will make the task of swapping in a real
-    // storage controller straight-forward.
-    $message->save();
     $this->mailHandler->sendMailMessages($message, $user);
     $contact_form = $message->getContactForm();
 
@@ -233,6 +221,10 @@ class MessageForm extends ContentEntityForm {
     else {
       $form_state->setRedirectUrl($contact_form->getRedirectUrl());
     }
+    // Save the message. In core this is a no-op but should contrib wish to
+    // implement message storage, this will make the task of swapping in a real
+    // storage controller straight-forward.
+    $message->save();
   }
 
 }

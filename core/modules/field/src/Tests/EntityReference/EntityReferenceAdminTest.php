@@ -375,6 +375,7 @@ class EntityReferenceAdminTest extends WebTestBase {
       'entity_reference_entity_id',
       'entity_reference_rss_category',
       'entity_reference_entity_view',
+      'hidden',
     ));
 
     // Test if User Reference Field has the correct formatters.
@@ -385,6 +386,7 @@ class EntityReferenceAdminTest extends WebTestBase {
       'entity_reference_entity_id',
       'entity_reference_entity_view',
       'entity_reference_label',
+      'hidden',
     ));
 
     // Test if Node Entity Reference Field has the correct formatters.
@@ -393,6 +395,7 @@ class EntityReferenceAdminTest extends WebTestBase {
       'entity_reference_label',
       'entity_reference_entity_id',
       'entity_reference_entity_view',
+      'hidden',
     ));
 
     // Test if Date Format Reference Field has the correct formatters.
@@ -401,6 +404,7 @@ class EntityReferenceAdminTest extends WebTestBase {
     $this->assertFieldSelectOptions('fields[field_' . $date_format_field_name . '][type]', array(
       'entity_reference_label',
       'entity_reference_entity_id',
+      'hidden',
     ));
   }
 

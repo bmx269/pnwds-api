@@ -121,7 +121,7 @@ class CronRunTest extends WebTestBase {
     $this->assertResponse(403);
 
     $this->drupalGet('admin/reports/status');
-    $this->clickLink(t('Run cron'));
+    $this->clickLink(t('run cron manually'));
     $this->assertResponse(200);
     $this->assertText(t('Cron ran successfully.'));
   }

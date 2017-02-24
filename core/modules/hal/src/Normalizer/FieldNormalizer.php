@@ -3,19 +3,19 @@
 namespace Drupal\hal\Normalizer;
 
 use Drupal\Component\Utility\NestedArray;
-use Drupal\serialization\Normalizer\FieldNormalizer as SerializationFieldNormalizer;
+use Symfony\Component\Serializer\Exception\InvalidArgumentException;
 
 /**
  * Converts the Drupal field structure to HAL array structure.
  */
-class FieldNormalizer extends SerializationFieldNormalizer {
+class FieldNormalizer extends NormalizerBase {
 
   /**
-   * The formats that the Normalizer can handle.
+   * The interface or class that this Normalizer supports.
    *
-   * @var array
+   * @var string
    */
-  protected $format = ['hal_json'];
+  protected $supportedInterfaceOrClass = 'Drupal\Core\Field\FieldItemListInterface';
 
   /**
    * {@inheritdoc}
@@ -49,6 +49,33 @@ class FieldNormalizer extends SerializationFieldNormalizer {
     // into the links property.
     $normalized = NestedArray::mergeDeepArray($normalized_field_items);
     return $normalized;
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function denormalize($data, $class, $format = NULL, array $context = array()) {
+    if (!isset($context['target_instance'])) {
+      throw new InvalidArgumentException('$context[\'target_instance\'] must be set to denormalize with the FieldNormalizer');
+    }
+    if ($context['target_instance']->getParent() == NULL) {
+      throw new InvalidArgumentException('The field passed in via $context[\'target_instance\'] must have a parent set.');
+    }
+
+    $items = $context['target_instance'];
+    $item_class = $items->getItemDefinition()->getClass();
+    foreach ($data as $item_data) {
+      // Create a new item and pass it as the target for the unserialization of
+      // $item_data. Note: if $item_data is about a different language than the
+      // default, FieldItemNormalizer::denormalize() will dismiss this item and
+      // create a new one for the right language.
+      $context['target_instance'] = $items->appendItem();
+      $this->serializer->denormalize($item_data, $item_class, $format, $context);
+    }
+
+    return $items;
+
   }
 
   /**

@@ -7,7 +7,6 @@ use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Exception\FieldStorageDefinitionUpdateForbiddenException;
@@ -317,7 +316,7 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
       }
       catch (\Exception $e) {
         if ($this->database->supportsTransactionalDDL()) {
-          $transaction->rollBack();
+          $transaction->rollback();
         }
         else {
           // Recreate original schema.
@@ -549,24 +548,6 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
         $this->processRevisionDataTable($entity_type, $schema[$tables['revision_data_table']]);
       }
 
-      // Add an index for the 'published' entity key.
-      if (is_subclass_of($entity_type->getClass(), EntityPublishedInterface::class)) {
-        $published_key = $entity_type->getKey('published');
-        if ($published_key && !$storage_definitions[$published_key]->hasCustomStorage()) {
-          $published_field_table = $table_mapping->getFieldTableName($published_key);
-          $id_key = $entity_type->getKey('id');
-          if ($bundle_key = $entity_type->getKey('bundle')) {
-            $key = "{$published_key}_{$bundle_key}";
-            $columns = [$published_key, $bundle_key, $id_key];
-          }
-          else {
-            $key = $published_key;
-            $columns = [$published_key, $id_key];
-          }
-          $schema[$published_field_table]['indexes'][$this->getEntityIndexName($entity_type, $key)] = $columns;
-        }
-      }
-
       $this->schema[$entity_type_id] = $schema;
 
       // Restore the actual definition.
@@ -695,13 +676,13 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
   protected function getFieldSchemaData($field_name, array $field_schema, array $column_mapping, $schema_key) {
     $data = array();
 
-    $entity_type_id = $this->entityType->id();
     foreach ($field_schema[$schema_key] as $key => $columns) {
       // To avoid clashes with entity-level indexes or unique keys we use
       // "{$entity_type_id}_field__" as a prefix instead of just
       // "{$entity_type_id}__". We additionally namespace the specifier by the
       // field name to avoid clashes when multiple fields of the same type are
       // added to an entity type.
+      $entity_type_id = $this->entityType->id();
       $real_key = $this->getFieldSchemaIdentifierName($entity_type_id, $field_name, $key);
       foreach ($columns as $column) {
         // Allow for indexes and unique keys to specified as an array of column
@@ -1290,7 +1271,7 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
       }
       catch (\Exception $e) {
         if ($this->database->supportsTransactionalDDL()) {
-          $transaction->rollBack();
+          $transaction->rollback();
         }
         else {
           // Recreate tables.
@@ -1381,7 +1362,7 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
       }
       catch (\Exception $e) {
         if ($this->database->supportsTransactionalDDL()) {
-          $transaction->rollBack();
+          $transaction->rollback();
         }
         else {
           // Recreate original schema.

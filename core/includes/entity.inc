@@ -514,7 +514,7 @@ function entity_get_display($entity_type, $bundle, $view_mode) {
  *     'weight' => 1,
  *   ))
  *   ->setComponent('field_image', array(
- *     'region' => 'hidden',
+ *     'type' => 'hidden',
  *   ))
  *   ->save();
  * @endcode

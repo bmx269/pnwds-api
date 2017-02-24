@@ -2,11 +2,12 @@
 
 namespace Drupal\twig_extension_test\TwigExtension;
 
+use Drupal\Core\Template\TwigExtension;
 
 /**
  * A test Twig extension that adds a custom function and a custom filter.
  */
-class TestExtension extends \Twig_Extension {
+class TestExtension extends TwigExtension {
 
   /**
    * Generates a list of all Twig functions that this extension defines.

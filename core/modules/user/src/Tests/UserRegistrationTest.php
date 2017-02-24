@@ -237,8 +237,12 @@ class UserRegistrationTest extends WebTestBase {
       ->set('timezone.default', 'Europe/Brussels')
       ->save();
 
-    // Check the presence of expected cache tags.
+    // Check that the account information options are not displayed
+    // as a details element if there is not more than one details in the form.
     $this->drupalGet('user/register');
+    $this->assertNoRaw('<details id="edit-account"><summary>Account information</summary>');
+
+    // Check the presence of expected cache tags.
     $this->assertCacheTag('config:user.settings');
 
     $edit = array();

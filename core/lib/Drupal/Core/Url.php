@@ -2,7 +2,6 @@
 
 namespace Drupal\Core;
 
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -672,23 +671,6 @@ class Url {
    */
   public function setOption($name, $value) {
     $this->options[$name] = $value;
-    return $this;
-  }
-
-  /**
-   * Merges the URL options with any currently set.
-   *
-   * In the case of conflict with existing options, the new options will replace
-   * the existing options.
-   *
-   * @param array $options
-   *   The array of options. See \Drupal\Core\Url::fromUri() for details on what
-   *   it contains.
-   *
-   * @return $this
-   */
-  public function mergeOptions($options) {
-    $this->options = NestedArray::mergeDeep($this->options, $options);
     return $this;
   }
 

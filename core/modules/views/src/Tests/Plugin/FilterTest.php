@@ -162,5 +162,4 @@ class FilterTest extends PluginTestBase {
     $this->drupalPostForm(NULL, [], t('Update preview'));
     $this->assertNoText('An illegal choice has been detected.');
   }
-
 }

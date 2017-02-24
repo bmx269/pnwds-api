@@ -37,8 +37,8 @@ class DrupalLink extends CKEditorPluginBase {
    */
   public function getConfig(Editor $editor) {
     return array(
-      'drupalLink_dialogTitleAdd' => $this->t('Add Link'),
-      'drupalLink_dialogTitleEdit' => $this->t('Edit Link'),
+      'drupalLink_dialogTitleAdd' => t('Add Link'),
+      'drupalLink_dialogTitleEdit' => t('Edit Link'),
     );
   }
 
@@ -49,11 +49,11 @@ class DrupalLink extends CKEditorPluginBase {
     $path = drupal_get_path('module', 'ckeditor') . '/js/plugins/drupallink';
     return array(
       'DrupalLink' => array(
-        'label' => $this->t('Link'),
+        'label' => t('Link'),
         'image' => $path . '/icons/drupallink.png',
       ),
       'DrupalUnlink' => array(
-        'label' => $this->t('Unlink'),
+        'label' => t('Unlink'),
         'image' => $path . '/icons/drupalunlink.png',
       ),
     );

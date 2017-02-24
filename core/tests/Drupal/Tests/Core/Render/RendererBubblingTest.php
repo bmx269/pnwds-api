@@ -9,7 +9,6 @@ namespace Drupal\Tests\Core\Render;
 
 use Drupal\Core\Cache\MemoryBackend;
 use Drupal\Core\KeyValueStore\KeyValueMemoryFactory;
-use Drupal\Core\Lock\NullLockBackend;
 use Drupal\Core\State\State;
 use Drupal\Core\Cache\Cache;
 
@@ -80,8 +79,8 @@ class RendererBubblingTest extends RendererTestBase {
     $bin = $this->randomMachineName();
 
     $this->setUpRequest();
-    $this->memoryCache = new MemoryBackend();
-    $custom_cache = new MemoryBackend();
+    $this->memoryCache = new MemoryBackend('render');
+    $custom_cache = new MemoryBackend($bin);
 
     $this->cacheFactory->expects($this->atLeastOnce())
       ->method('get')
@@ -503,7 +502,7 @@ class RendererBubblingTest extends RendererTestBase {
     $this->setupMemoryCache();
 
     // Mock the State service.
-    $memory_state = new State(new KeyValueMemoryFactory(), new MemoryBackend('test'), new NullLockBackend());
+    $memory_state = new State(new KeyValueMemoryFactory());;
     \Drupal::getContainer()->set('state', $memory_state);
     $this->controllerResolver->expects($this->any())
       ->method('getControllerFromDefinition')

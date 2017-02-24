@@ -10,9 +10,6 @@ use Drupal\file\Entity\File;
 
 /**
  * Provides methods specifically for testing File module's field handling.
- *
- * @deprecated Scheduled for removal in Drupal 9.0.0.
- *   Use \Drupal\Tests\file\Functional\FileFieldTestBase instead.
  */
 abstract class FileFieldTestBase extends WebTestBase {
 

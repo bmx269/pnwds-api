@@ -5,12 +5,9 @@ namespace Drupal\Tests\Core\Menu;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\Container;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Menu\DefaultMenuLinkTreeManipulators;
 use Drupal\Core\Menu\MenuLinkTreeElement;
 use Drupal\Tests\UnitTestCase;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests the default menu link tree manipulators.
@@ -36,11 +33,11 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
   protected $currentUser;
 
   /**
-   * The mocked entity type manager.
+   * The mocked query factory.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Entity\Query\QueryFactory|\PHPUnit_Framework_MockObject_MockObject
    */
-  protected $entityTypeManager;
+  protected $queryFactory;
 
   /**
    * The default menu link tree manipulators.
@@ -73,9 +70,11 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
     $this->currentUser = $this->getMock('Drupal\Core\Session\AccountInterface');
     $this->currentUser->method('isAuthenticated')
       ->willReturn(TRUE);
-    $this->entityTypeManager = $this->getMock(EntityTypeManagerInterface::class);
+    $this->queryFactory = $this->getMockBuilder('Drupal\Core\Entity\Query\QueryFactory')
+      ->disableOriginalConstructor()
+      ->getMock();
 
-    $this->defaultMenuTreeManipulators = new DefaultMenuLinkTreeManipulators($this->accessManager, $this->currentUser, $this->entityTypeManager);
+    $this->defaultMenuTreeManipulators = new DefaultMenuLinkTreeManipulators($this->accessManager, $this->currentUser, $this->queryFactory);
 
     $cache_contexts_manager = $this->prophesize(CacheContextsManager::class);
     $cache_contexts_manager->assertValidTokens()->willReturn(TRUE);
@@ -296,18 +295,14 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
       ->with('nid', array(1, 2, 3, 4));
     $query->expects($this->at(1))
       ->method('condition')
-      ->with('status', NodeInterface::PUBLISHED);
+      ->with('status', NODE_PUBLISHED);
     $query->expects($this->once())
       ->method('execute')
       ->willReturn(array(1, 2, 4));
-    $storage = $this->getMock(EntityStorageInterface::class);
-    $storage->expects($this->once())
-      ->method('getQuery')
-      ->willReturn($query);
-    $this->entityTypeManager->expects($this->once())
-      ->method('getStorage')
+    $this->queryFactory->expects($this->once())
+      ->method('get')
       ->with('node')
-      ->willReturn($storage);
+      ->willReturn($query);
 
     $node_access_result = AccessResult::allowed()->cachePerPermissions()->addCacheContexts(['user.node_grants:view']);
 
@@ -342,4 +337,8 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
     $this->assertEquals(AccessResult::neutral()->cachePerPermissions(), $tree[5]->subtree[6]->access);
   }
 
+}
+
+if (!defined('NODE_PUBLISHED')) {
+  define('NODE_PUBLISHED', 1);
 }

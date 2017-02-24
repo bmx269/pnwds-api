@@ -10,9 +10,6 @@ use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Base class for content translation tests.
- *
- * @deprecated Scheduled for removal in Drupal 9.0.0.
- *   Use \Drupal\Tests\content_translation\Functional\ContentTranslationTestBase instead.
  */
 abstract class ContentTranslationTestBase extends WebTestBase {
 

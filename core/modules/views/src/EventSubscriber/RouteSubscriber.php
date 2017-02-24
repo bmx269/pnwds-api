@@ -156,11 +156,7 @@ class RouteSubscriber extends RouteSubscriberBase {
   }
 
   /**
-   * Stores the new route names after they have been rebuilt.
-   *
-   * Callback for the RoutingEvents::FINISHED event.
-   *
-   * @see \Drupal\views\EventSubscriber::getSubscribedEvents()
+   * {@inheritdoc}
    */
   public function routeRebuildFinished() {
     $this->reset();
