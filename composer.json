@@ -11,10 +11,8 @@
         "drupal/core": "~8.3",
         "drupal/conflict": "8.*",
         "drupal/jsonapi": "8.*",
-        "drupal/jwt": "8.*",
         "drupal/multiversion": "8.*",
         "drupal/relaxed": "8.*",
-        "drupal/simple_oauth": "8.*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
