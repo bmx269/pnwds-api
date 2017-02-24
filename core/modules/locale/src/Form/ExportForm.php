@@ -97,7 +97,6 @@ class ExportForm extends FormBase {
       $form['content_options'] = array(
         '#type' => 'details',
         '#title' => $this->t('Export options'),
-        '#collapsed' => TRUE,
         '#tree' => TRUE,
         '#states' => array(
           'invisible' => array(

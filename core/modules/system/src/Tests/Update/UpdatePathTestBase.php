@@ -3,7 +3,7 @@
 namespace Drupal\system\Tests\Update;
 
 use Drupal\Component\Utility\Crypt;
-use Drupal\config\Tests\SchemaCheckTestTrait;
+use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\Core\Database\Database;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Language\Language;
@@ -292,7 +292,7 @@ abstract class UpdatePathTestBase extends WebTestBase {
       $this->assertFalse($needs_updates, 'After all updates ran, entity schema is up to date.');
       if ($needs_updates) {
         foreach (\Drupal::entityDefinitionUpdateManager()
-                   ->getChangeSummary() as $entity_type_id => $summary) {
+          ->getChangeSummary() as $entity_type_id => $summary) {
           foreach ($summary as $message) {
             $this->fail($message);
           }

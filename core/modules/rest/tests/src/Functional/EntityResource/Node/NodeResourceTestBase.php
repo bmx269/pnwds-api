@@ -126,7 +126,7 @@ abstract class NodeResourceTestBase extends EntityResourceTestBase {
       ],
       'changed' => [
         [
-          'value' => '123456789',
+          'value' =>  (string) $this->entity->getChangedTime(),
         ],
       ],
       'promote' => [
@@ -191,6 +191,20 @@ abstract class NodeResourceTestBase extends EntityResourceTestBase {
         ],
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getExpectedUnauthorizedAccessMessage($method) {
+    if ($this->config('rest.settings')->get('bc_entity_resource_permissions')) {
+      return parent::getExpectedUnauthorizedAccessMessage($method);
+    }
+
+    if ($method === 'GET' || $method == 'PATCH' || $method == 'DELETE') {
+      return "The 'access content' permission is required.";
+    }
+    return parent::getExpectedUnauthorizedAccessMessage($method);
   }
 
 }

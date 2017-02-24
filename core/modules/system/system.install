@@ -257,6 +257,44 @@ function system_requirements($phase) {
     $requirements['php_opcache']['title'] = t('PHP OPcode caching');
   }
 
+  if ($phase != 'update') {
+    // Test whether we have a good source of random bytes.
+    $requirements['php_random_bytes'] = array(
+      'title' => t('Random number generation'),
+    );
+    try {
+      $bytes = random_bytes(10);
+      if (strlen($bytes) != 10) {
+        throw new \Exception(t('Tried to generate 10 random bytes, generated @count', array('@count' => strlen($bytes))));
+      }
+      $requirements['php_random_bytes']['value'] = t('Successful');
+    }
+    catch (\Exception $e) {
+      // If /dev/urandom is not available on a UNIX-like system, check whether
+      // open_basedir restrictions are the cause.
+      $open_basedir_blocks_urandom = FALSE;
+      if (DIRECTORY_SEPARATOR === '/' && !@is_readable('/dev/urandom')) {
+        $open_basedir = ini_get('open_basedir');
+        if ($open_basedir) {
+          $open_basedir_paths = explode(PATH_SEPARATOR, $open_basedir);
+          $open_basedir_blocks_urandom = !array_intersect(array('/dev', '/dev/', '/dev/urandom'), $open_basedir_paths);
+        }
+      }
+      $args = array(
+        ':drupal-php' => 'https://www.drupal.org/docs/7/system-requirements/php#csprng',
+        '%exception_message' => $e->getMessage(),
+      );
+      if ($open_basedir_blocks_urandom) {
+        $requirements['php_random_bytes']['description'] = t('Drupal is unable to generate highly randomized numbers, which means certain security features like password reset URLs are not as secure as they should be. Instead, only a slow, less-secure fallback generator is available. The most likely cause is that open_basedir restrictions are in effect and /dev/urandom is not on the whitelist. See the <a href=":drupal-php">system requirements</a> page for more information. %exception_message', $args);
+      }
+      else {
+        $requirements['php_random_bytes']['description'] = t('Drupal is unable to generate highly randomized numbers, which means certain security features like password reset URLs are not as secure as they should be. Instead, only a slow, less-secure fallback generator is available. See the <a href=":drupal-php">system requirements</a> page for more information. %exception_message', $args);
+      }
+      $requirements['php_random_bytes']['value'] = t('Less secure');
+      $requirements['php_random_bytes']['severity'] = REQUIREMENT_ERROR;
+    }
+  }
+
   if ($phase == 'install' || $phase == 'update') {
     // Test for PDO (database).
     $requirements['database_extensions'] = array(
@@ -497,14 +535,20 @@ function system_requirements($phase) {
         ],
       ];
     }
-    $cron_url = \Drupal::url('system.cron', ['key' => \Drupal::state()->get('system.cron_key'), ['absolute' => TRUE]]);
     $requirements['cron']['description'][] = [
       [
-        '#markup' => t('You can <a href=":cron">run cron manually</a>.', [':cron' => \Drupal::url('system.run_cron')]),
+        '#type' => 'link',
+        '#prefix' => '(',
+        '#title' => t('more information'),
+        '#suffix' => ')',
+        '#url' => Url::fromRoute('system.cron_settings'),
       ],
       [
-        '#prefix' => '<br />',
-        '#markup' => t('To run cron from outside the site, go to <a href=":url">@cron</a>', [':url' => $cron_url, '@cron' => $cron_url]),
+        '#prefix' => '<span class="cron-description__run-cron">',
+        '#suffix' => '</span>',
+        '#type' => 'link',
+        '#title' => t('Run cron'),
+        '#url' => Url::fromRoute('system.run_cron'),
       ],
     ];
   }
@@ -861,6 +905,23 @@ function system_requirements($phase) {
         'title' => t('IIS httpoxy protection'),
         'value' => t('Your PHP runtime version is affected by the httpoxy vulnerability.'),
         'description' => t('Either update your PHP runtime version or uncomment the "Erase HTTP_PROXY" rule in your web.config file and add HTTP_PROXY to the allowed headers list. See more details in the <a href=":link">security advisory</a>.', [':link' => 'https://www.drupal.org/SA-CORE-2016-003']),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+  }
+
+  // Installations on Windows can run into limitations with MAX_PATH if the
+  // Drupal root directory is too deep in the filesystem. Generally this shows
+  // up in cached Twig templates and other public files with long directory or
+  // file names. There is no definite root directory depth below which Drupal is
+  // guaranteed to function correctly on Windows. Since problems are likely
+  // with more than 100 characters in the Drupal root path, show an error.
+  if (substr(PHP_OS, 0, 3) == 'WIN') {
+    $depth = strlen(realpath(DRUPAL_ROOT . '/' . PublicStream::basePath()));
+    if ($depth > 120) {
+      $requirements['max_path_on_windows'] = [
+        'title' => t('Windows installation depth'),
+        'description' => t('The public files directory path is %depth characters. Paths longer than 120 characters will cause problems on Windows.', ['%depth' => $depth]),
         'severity' => REQUIREMENT_ERROR,
       ];
     }
@@ -1745,4 +1806,31 @@ function system_update_8202() {
 
 /**
  * @} End of "addtogroup updates-8.2.3".
+ */
+
+/**
+ * @addtogroup updates-8.3.0
+ * @{
+ */
+
+/**
+ * Add detailed cron logging configuration.
+ */
+function system_update_8300() {
+  \Drupal::configFactory()->getEditable('system.cron')
+    ->set('logging', 1)
+    ->save(TRUE);
+}
+
+/**
+ * Add install profile to core.extension configuration.
+ */
+function system_update_8301() {
+  \Drupal::configFactory()->getEditable('core.extension')
+    ->set('profile', \Drupal::installProfile())
+    ->save();
+}
+
+/**
+ * @} End of "addtogroup updates-8.3.0".
  */

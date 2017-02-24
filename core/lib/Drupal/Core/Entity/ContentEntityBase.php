@@ -9,6 +9,7 @@ use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\TypedData\TranslationStatusInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 
 /**
@@ -16,22 +17,7 @@ use Drupal\Core\TypedData\TypedDataInterface;
  *
  * @ingroup entity_api
  */
-abstract class ContentEntityBase extends Entity implements \IteratorAggregate, ContentEntityInterface {
-
-  /**
-   * Status code identifying a removed translation.
-   */
-  const TRANSLATION_REMOVED = 0;
-
-  /**
-   * Status code identifying an existing translation.
-   */
-  const TRANSLATION_EXISTING = 1;
-
-  /**
-   * Status code identifying a newly created translation.
-   */
-  const TRANSLATION_CREATED = 2;
+abstract class ContentEntityBase extends Entity implements \IteratorAggregate, ContentEntityInterface, TranslationStatusInterface {
 
   /**
    * The plain data values of the contained fields.
@@ -163,6 +149,13 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
   protected $validationRequired = FALSE;
 
   /**
+   * The loaded revision ID before the new revision was set.
+   *
+   * @var int
+   */
+  protected $loadedRevisionId;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $values, $entity_type, $bundle = FALSE, $translations = array()) {
@@ -220,7 +213,10 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
 
     // Initialize translations. Ensure we have at least an entry for the default
     // language.
-    $data = array('status' => static::TRANSLATION_EXISTING);
+    // We determine if the entity is new by checking in the entity values for
+    // the presence of the id entity key, as the usage of ::isNew() is not
+    // possible in the constructor.
+    $data = isset($values[$this->getEntityType()->getKey('id')]) ? ['status' => static::TRANSLATION_EXISTING] : ['status' => static::TRANSLATION_CREATED];
     $this->translations[LanguageInterface::LANGCODE_DEFAULT] = $data;
     $this->setDefaultLangcode();
     if ($translations) {
@@ -229,6 +225,11 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
           $this->translations[$langcode] = $data;
         }
       }
+    }
+    if ($this->getEntityType()->isRevisionable()) {
+      // Store the loaded revision ID the entity has been loaded with to
+      // keep it safe from changes.
+      $this->updateLoadedRevisionId();
     }
   }
 
@@ -284,6 +285,21 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
   /**
    * {@inheritdoc}
    */
+  public function getLoadedRevisionId() {
+    return $this->loadedRevisionId;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function updateLoadedRevisionId() {
+    $this->loadedRevisionId = $this->getRevisionId() ?: $this->loadedRevisionId;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isNewRevision() {
     return $this->newRevision || ($this->getEntityType()->hasKey('revision') && !$this->getRevisionId());
   }
@@ -296,7 +312,9 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
     if (isset($new_value)) {
       $this->isDefaultRevision = (bool) $new_value;
     }
-    return $return;
+    // New entities should always ensure at least one default revision exists,
+    // creating an entity without a default revision is an invalid state.
+    return $this->isNew() || $return;
   }
 
   /**
@@ -363,6 +381,25 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
    * {@inheritdoc}
    */
   public function preSaveRevision(EntityStorageInterface $storage, \stdClass $record) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+
+    // Update the status of all saved translations.
+    $removed = [];
+    foreach ($this->translations as $langcode => &$data) {
+      if ($data['status'] == static::TRANSLATION_REMOVED) {
+        $removed[$langcode] = TRUE;
+      }
+      else {
+        $data['status'] = static::TRANSLATION_EXISTING;
+      }
+    }
+    $this->translations = array_diff_key($this->translations, $removed);
   }
 
   /**
@@ -791,6 +828,7 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
     $translation->translatableEntityKeys = &$this->translatableEntityKeys;
     $translation->translationInitialize = FALSE;
     $translation->typedData = NULL;
+    $translation->loadedRevisionId = &$this->loadedRevisionId;
 
     return $translation;
   }
@@ -829,7 +867,7 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
     // Initialize the translation object.
     /** @var \Drupal\Core\Entity\ContentEntityStorageInterface $storage */
     $storage = $this->entityManager()->getStorage($this->getEntityTypeId());
-    $this->translations[$langcode]['status'] = static::TRANSLATION_CREATED;
+    $this->translations[$langcode]['status'] = !isset($this->translations[$langcode]['status_existed']) ? static::TRANSLATION_CREATED : static::TRANSLATION_EXISTING;
     return $storage->createTranslation($this, $langcode, $values);
   }
 
@@ -844,11 +882,32 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
           unset($this->fields[$name][$langcode]);
         }
       }
-      $this->translations[$langcode]['status'] = static::TRANSLATION_REMOVED;
+      // If removing a translation which has not been saved yet, then we have
+      // to remove it completely so that ::getTranslationStatus returns the
+      // proper status.
+      if ($this->translations[$langcode]['status'] == static::TRANSLATION_CREATED) {
+        unset($this->translations[$langcode]);
+      }
+      else {
+        if ($this->translations[$langcode]['status'] == static::TRANSLATION_EXISTING) {
+          $this->translations[$langcode]['status_existed'] = TRUE;
+        }
+        $this->translations[$langcode]['status'] = static::TRANSLATION_REMOVED;
+      }
     }
     else {
       throw new \InvalidArgumentException("The specified translation ($langcode) cannot be removed.");
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTranslationStatus($langcode) {
+    if ($langcode == $this->defaultLangcode) {
+      $langcode = LanguageInterface::LANGCODE_DEFAULT;
+    }
+    return isset($this->translations[$langcode]) ? $this->translations[$langcode]['status'] : NULL;
   }
 
   /**
@@ -951,14 +1010,9 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
    * Implements the magic method for isset().
    */
   public function __isset($name) {
-    // "Official" Field API fields are always set.
-    if ($this->hasField($name)) {
-      return TRUE;
-    }
-    // For non-field properties, check the internal values.
-    else {
-      return isset($this->values[$name]);
-    }
+    // "Official" Field API fields are always set. For non-field properties,
+    // check the internal values.
+    return $this->hasField($name) ? TRUE : isset($this->values[$name]);
   }
 
   /**
@@ -996,6 +1050,7 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
     // Check whether the entity type supports revisions and initialize it if so.
     if ($entity_type->isRevisionable()) {
       $duplicate->{$entity_type->getKey('revision')}->value = NULL;
+      $duplicate->loadedRevisionId = NULL;
     }
 
     return $duplicate;
@@ -1007,36 +1062,63 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
   public function __clone() {
     // Avoid deep-cloning when we are initializing a translation object, since
     // it will represent the same entity, only with a different active language.
-    if (!$this->translationInitialize) {
-      // The translation is a different object, and needs its own TypedData
-      // adapter object.
-      $this->typedData = NULL;
-      $definitions = $this->getFieldDefinitions();
-      foreach ($this->fields as $name => $values) {
-        $this->fields[$name] = array();
-        // Untranslatable fields may have multiple references for the same field
-        // object keyed by language. To avoid creating different field objects
-        // we retain just the original value, as references will be recreated
-        // later as needed.
-        if (!$definitions[$name]->isTranslatable() && count($values) > 1) {
-          $values = array_intersect_key($values, array(LanguageInterface::LANGCODE_DEFAULT => TRUE));
-        }
-        foreach ($values as $langcode => $items) {
-          $this->fields[$name][$langcode] = clone $items;
-          $this->fields[$name][$langcode]->setContext($name, $this->getTranslation($langcode)->getTypedData());
-        }
+    if ($this->translationInitialize) {
+      return;
+    }
+
+    // The translation is a different object, and needs its own TypedData
+    // adapter object.
+    $this->typedData = NULL;
+    $definitions = $this->getFieldDefinitions();
+
+    // The translation cache has to be cleared before cloning the fields
+    // below so that the call to getTranslation() does not re-use the
+    // translation objects of the old entity but instead creates new
+    // translation objects from the newly cloned entity. Otherwise the newly
+    // cloned field item lists would hold references to the old translation
+    // objects in their $parent property after the call to setContext().
+    $this->clearTranslationCache();
+
+    // Because the new translation objects that are created below are
+    // themselves created by *cloning* the newly cloned entity we need to
+    // make sure that the references to property values are properly cloned
+    // before cloning the fields. Otherwise calling
+    // $items->getEntity()->isNew(), for example, would return the
+    // $enforceIsNew value of the old entity.
+
+    // Ensure the translations array is actually cloned by overwriting the
+    // original reference with one pointing to a copy of the array.
+    $translations = $this->translations;
+    $this->translations = &$translations;
+
+    // Ensure that the following properties are actually cloned by
+    // overwriting the original references with ones pointing to copies of
+    // them: enforceIsNew, newRevision, loadedRevisionId and fields.
+    $enforce_is_new = $this->enforceIsNew;
+    $this->enforceIsNew = &$enforce_is_new;
+
+    $new_revision = $this->newRevision;
+    $this->newRevision = &$new_revision;
+
+    $original_revision_id = $this->loadedRevisionId;
+    $this->loadedRevisionId = &$original_revision_id;
+
+    $fields = $this->fields;
+    $this->fields = &$fields;
+
+    foreach ($this->fields as $name => $values) {
+      $this->fields[$name] = array();
+      // Untranslatable fields may have multiple references for the same field
+      // object keyed by language. To avoid creating different field objects
+      // we retain just the original value, as references will be recreated
+      // later as needed.
+      if (!$definitions[$name]->isTranslatable() && count($values) > 1) {
+        $values = array_intersect_key($values, array(LanguageInterface::LANGCODE_DEFAULT => TRUE));
       }
-
-      // Ensure the translations array is actually cloned by overwriting the
-      // original reference with one pointing to a copy of the array.
-      $this->clearTranslationCache();
-      $translations = $this->translations;
-      $this->translations = &$translations;
-
-      // Ensure the enforceIsNew property is actually cloned by overwriting the
-      // original reference with one pointing to a copy of it.
-      $enforce_is_new = $this->enforceIsNew;
-      $this->enforceIsNew = &$enforce_is_new;
+      foreach ($values as $langcode => $items) {
+        $this->fields[$name][$langcode] = clone $items;
+        $this->fields[$name][$langcode]->setContext($name, $this->getTranslation($langcode)->getTypedData());
+      }
     }
   }
 
@@ -1142,7 +1224,7 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
       $fields[$entity_type->getKey('langcode')] = BaseFieldDefinition::create('language')
         ->setLabel(new TranslatableMarkup('Language'))
         ->setDisplayOptions('view', [
-          'type' => 'hidden',
+          'region' => 'hidden',
         ])
         ->setDisplayOptions('form', [
           'type' => 'language_select',
@@ -1182,6 +1264,31 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
   }
 
   /**
+   * Returns an array of field names to skip in ::hasTranslationChanges.
+   *
+   * @return array
+   *   An array of field names.
+   */
+  protected function getFieldsToSkipFromTranslationChangesCheck() {
+    // A list of known revision metadata fields which should be skipped from
+    // the comparision.
+    // @todo Replace the hard coded list of revision metadata fields with the
+    // solution from https://www.drupal.org/node/2615016.
+    $fields = [
+      $this->getEntityType()->getKey('revision'),
+      'revision_translation_affected',
+      'revision_uid',
+      'revision_user',
+      'revision_timestamp',
+      'revision_created',
+      'revision_log',
+      'revision_log_message',
+    ];
+
+    return $fields;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function hasTranslationChanges() {
@@ -1214,13 +1321,17 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
     // possible or be meaningless.
     /** @var \Drupal\Core\Entity\ContentEntityBase $translation */
     $translation = $original->getTranslation($this->activeLangcode);
+
+    // The list of fields to skip from the comparision.
+    $skip_fields = $this->getFieldsToSkipFromTranslationChangesCheck();
+
     foreach ($this->getFieldDefinitions() as $field_name => $definition) {
       // @todo Avoid special-casing the following fields. See
       //    https://www.drupal.org/node/2329253.
-      if ($field_name == 'revision_translation_affected' || $field_name == 'revision_id') {
+      if (in_array($field_name, $skip_fields, TRUE)) {
         continue;
       }
-      if (!$definition->isComputed() && (!$translated || $definition->isTranslatable())) {
+      if (!$definition->isComputed()) {
         $items = $this->get($field_name)->filterEmptyItems();
         $original_items = $translation->get($field_name)->filterEmptyItems();
         if (!$items->equals($original_items)) {

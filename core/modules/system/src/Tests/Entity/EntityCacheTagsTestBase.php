@@ -16,6 +16,9 @@ use Drupal\user\RoleInterface;
 
 /**
  * Provides helper methods for Entity cache tags tests.
+ *
+ * @deprecated Scheduled for removal in Drupal 9.0.0.
+ *   Use \Drupal\Tests\system\Functional\Entity\EntityCacheTagsTestBase instead.
  */
 abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
 
@@ -343,7 +346,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
     // 'user.permissions' is a required cache context, and responses that vary
     // by this cache context when requested by anonymous users automatically
     // also get this cache tag, to ensure correct invalidation.
-    $page_cache_tags = Cache::mergeTags(['rendered'], ['config:user.role.anonymous']);
+    $page_cache_tags = Cache::mergeTags(['http_response', 'rendered'], ['config:user.role.anonymous']);
     // If the block module is used, the Block page display variant is used,
     // which adds the block config entity type's list cache tags.
     $page_cache_tags = Cache::mergeTags($page_cache_tags, \Drupal::moduleHandler()->moduleExists('block') ? ['config:block_list'] : []);
@@ -641,7 +644,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
 
     // Verify cache hits.
     $referencing_entity_cache_tags = Cache::mergeTags($this->referencingEntity->getCacheTags(), \Drupal::entityManager()->getViewBuilder('entity_test')->getCacheTags());
-    $referencing_entity_cache_tags = Cache::mergeTags($referencing_entity_cache_tags, ['rendered']);
+    $referencing_entity_cache_tags = Cache::mergeTags($referencing_entity_cache_tags, ['http_response', 'rendered']);
 
     $nonempty_entity_listing_cache_tags = Cache::mergeTags($this->entity->getEntityType()->getListCacheTags(), $this->getAdditionalCacheTagsForEntityListing());
     $nonempty_entity_listing_cache_tags = Cache::mergeTags($nonempty_entity_listing_cache_tags, $page_cache_tags);

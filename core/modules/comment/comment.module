@@ -28,16 +28,25 @@ use Drupal\user\RoleInterface;
 
 /**
  * Anonymous posters cannot enter their contact information.
+ *
+ * @deprecated in Drupal 8.3.x and will be removed before Drupal 9.0.0.
+ *   Use \Drupal\comment\CommentInterface::ANONYMOUS_MAYNOT_CONTACT instead.
  */
 const COMMENT_ANONYMOUS_MAYNOT_CONTACT = 0;
 
 /**
  * Anonymous posters may leave their contact information.
+ *
+ * @deprecated in Drupal 8.3.x and will be removed before Drupal 9.0.0.
+ *   Use \Drupal\comment\CommentInterface::ANONYMOUS_MAY_CONTACT instead.
  */
 const COMMENT_ANONYMOUS_MAY_CONTACT = 1;
 
 /**
  * Anonymous posters are required to leave their contact information.
+ *
+ * @deprecated in Drupal 8.3.x and will be removed before Drupal 9.0.0.
+ *   Use \Drupal\comment\CommentInterface::ANONYMOUS_MUST_CONTACT instead.
  */
 const COMMENT_ANONYMOUS_MUST_CONTACT = 2;
 
@@ -341,7 +350,7 @@ function comment_form_field_storage_config_edit_form_alter(&$form, FormStateInte
  */
 function comment_entity_storage_load($entities, $entity_type) {
   // Comments can only be attached to content entities, so skip others.
-  if (!\Drupal::entityManager()->getDefinition($entity_type)->isSubclassOf('Drupal\Core\Entity\FieldableEntityInterface')) {
+  if (!\Drupal::entityManager()->getDefinition($entity_type)->entityClassImplements(FieldableEntityInterface::class)) {
     return;
   }
   // @todo Investigate in https://www.drupal.org/node/2527866 why we need that.
