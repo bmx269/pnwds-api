@@ -1,0 +1,11 @@
+{
+  "groups": {
+    "default": {
+      "packages": [
+        "core/assets/vendor/jquery.ui/package.json",
+        "core/package.json",
+        "modules/contrib/relaxed/tests/pouchdb/package.json"
+      ]
+    }
+  }
+}
